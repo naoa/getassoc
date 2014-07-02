@@ -1,0 +1,26 @@
+<html><head><title>full-text search query syntax</title></head><body
+><pre>
+&lt;query&gt; ::= &lt;cquery&gt; [ | &lt;cquery&gt; ]...
+&lt;cquery&gt; ::= &lt;squery&gt; [ &amp; &lt;squery&gt; ]...
+&lt;squery&gt; ::= [ ~ ] &lt;text&gt; [ @ &lt;segment-spec&gt; ] [ # &lt;options&gt; ]
+&lt;segment-spec&gt; ::= &lt;empty&gt; | &lt;segment-spec-1&gt; [ , &lt;segment-spec-1&gt; ]...
+&lt;segment-spec-1&gt; ::= &lt;number&gt; | &lt;number&gt;-&lt;number&gt;
+&lt;options&gt; ::= &lt;option&gt; [ , &lt;option&gt; ]...
+&lt;option&gt; ::= ignore-case | ...
+&lt;text&gt; ::= any string, escape character is a '\'
+
+--
+example:
+	beethoven#ignore-case|Bach@0
+
+--
+options:
+	match-head, match-tail, word-boundary, ignore-case,
+	collapse-hirakata, collapse-qy,
+	collapse-ka, collapse-dash, collapse-noma,
+	collapse-kanji-variant, collapse-kana-variant, collapse-ps-mark,
+	collapse-zdz, collapse-bv, collapse-tts,
+	collapse-ssh, collapse-ay, collapse-kx, collapse-hf,
+	ignore-punct, ignore-space,
+	[collapse-eshk, ]
+</pre></body></html>

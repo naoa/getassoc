@@ -1,0 +1,24 @@
+getassoc will accept -r rcfile,
+provided getassoc is configured with --enable-newlayout.
+
+Users may override default value of following variables of gss3 processor:
+
+nacls=1
+nkcls=1
+niwords=70
+yykn=10
+stage1-sim=WT_SMARTAW
+stage2-sim=WT_SMARTWA
+stage3-sim=WT_SMARTAW
+cs-type=CS_HBC
+cs-vsim=WT_SMART
+cs-sim=WT_SMART
+stemmer=auto
+
+rcfile is a line oriented key-value file.
+Each line should consists of key=value\n form.
+Lines begins with # and empty lines are ignored.
+Carriage return character before newline character and
+spaces arrownd = are not allowd.
+(it will be treated as a part of key and value, often causing an interpretation error).
+

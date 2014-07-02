@@ -1,0 +1,179 @@
+Makefile.in: rpm 対策
+getassoc: -r rcfile でデフォルト値の指定が可能になった
+configure: --enable-dlsim 復活, 類似度の動的ロードは --enable-shared=yes と --enable-dlsim=yes の両方を指定することで有効化できる
+clang でコンパイル可能に
+configure.in: added --enable-newlayout. >> getassoc の起動時オプション -R で GETAROT の指定が必須。
+xgetassoc/setup: オプション -l 追加
+assv: --enable-uniquify つきで configure すると、同じ名前の記事をつぶすことができる。名前の同一性は、\000か\001まで判断される。遅いので注意。
+xgetassoc: 分散 setup のときに、-R、-C、-X のいずれかの指定が必須になった。
+xgetassoc: server モードのときに、-t tmpdir が指定されない場合、環境変数TMPDIRを見るようになった。
+xgetassoc: server モードのときに、-r pwam_root の指定が必須になった。
+xgetassoc, tgetassoc: 環境変数 GETAROOT を見なくなった。規定値は、NULL もしくは SGETAROOT である。それ以外の場合、-R を用いて明示的に指定すること。両方指定すると、後から指定した方が有効。
+xgetassoc: 作業ディレクトリが -t で指定されない場合、環境変数 TMPDIR からとるようになった。それでもない場合は、/tmpになる。(従来の$GETAROOT/tmpと異なるので注意)
+wam_open: the second argument became mandatory.
+gss3: attribute `lang' of `freetext' element is deprecated. use attribute `stemmer'.
+function 'text2vec' no longer accepts NULL as its third argument.
+全文一致を複数スレッドにて実行する機能を試験的に追加、--with-xfssncpu=#。ただし、512より小さいレンジに対しては常に単一スレッド、キャッシュサイズは8192。実運用ではこの2つのパラメータを調節する必要あり。
+関数名変更: psort => pxsort
+XXX 全文一致のインデクスに加えない部分文字列を指定する関数(先頭の文字と、その直前の文字で判断)を追加(default off、--enable-indexp) -- 曖昧一致をonにしていてもリテラリに与えられた文字で判断するので注意
+XXX 全文一致で曖昧一致を全てoffにするオプション追加 (--enable-rigidstrcmp、速くなるかどうかは未知数)
+<filter><search>に<n>だけの項があらわれると結果が壊れる問題を修正 -- [注意]全文一致の場合に<n>だけの項が現れるのは依然として禁止
+xmlns有効の時に、全文一致の式のparseに失敗する問題を修正
+<filter expression=>と<filter><search>を同時に指定するとクラッシュする問題を修正
+結果の文書数や単語数が、要求クラスタ数を下回るとクラッシュする問題を修正
+simcomp, assv, simdef の内部仕様変更
+-- 1.1.2
+icu-config が -ansi を吐く問題に一部対応
+-- 1.1.1
+分散版で、全文検索フィルタを使うとクラッシュする問題を修正
+configureのexpatの存在テストを削除(検出できない場合があるため)
+セットアップがsigpipeで失敗する問題を修正
+itbファイル中の空白行は無視されるようになった
+存在しない属性ファイルを開こうとするとゴミができる問題を修正
+XXX nwam.c: cw をソートする機能を追加(予定) XXX
+wtouch を追加 (引き数のファイルを pagesize おきに 1 byte 読むだけのプログラム)
+print.c: ID が NULL のときにクラッシュする問題を修正
+tgetassoc.assv-test-exec: -a が(-w と同様に)ベクタではなくIDを使用するよう変更, -v を追加, -v が従来の -a と同じ動作
+xgetassoc.xgserv: -p, -r のデフォルト値を $(prefix)/pnwam, $(prefix)/tmp に変更
+-- 1.1
+stp.c: drop できない問題を修正
+-- 1.1.rc
+stp.c: itb が壊れているとハングする問題を修正
+configure: --enable-dlsim 廃止, 類似度コンパイラは --enable-shared=yes (default: yes) で有効化 (Solaris, MacOSX では陽に --enable-shared=no を指定するか Makefile.in を修正しないとハマる)
+gss3.q: cs-type が K-menas の時に cs-vsim のデフォルトを WT_NONE に変更
+text2vec: stmc が選択可能に => 遅い!
+getassoc: relay.conf を相対パスに変更 ($GETAROOT/share/relay.conf)
+-- 1.1.beta
+gss3: cs-vsim でクラスタリング(ncsb)の特徴ベクトル抽出の重み指定追加. default: cs-vsim="WT_SMART", K-means では cs-vsim="WT_NONE" (TF_d を使用) がオススメ
+C: cs_elem の定義を変更 --> GETA32u との互換性無し (バックポートする?)
+ncs.c: K-means の試験的実装(距離関数および重みの調整が必要) -- C-API では c_type == CS_K_MEANS, gss3 では cs-type="CS_K_MEANS"
+stp: tsv も引き数に指定できるようになった. (WIN32 版は標準入力からのインストール不可.)
+-- 1.1.alpha2
+★重要★: 全文一致インデクス(@fss)を作成している場合, 再セットアップ(更新は不可)が必須になります.
+xgetassoc: コマンドを数字からシンボルに変更
+-- 1.1.alpha
+DATDIR_GETASSOC: $(datadir)/geassoc (abs.) => $GETAROOT/share/getassoc (rel.) に変更
+tgetassoc: (gss3/gss3-loop) -h を追加.
+tgetassoc: コマンドを数字からシンボルに変更
+libnwam.a: エントリーポイントを整理.
+C: ヘッダーを整理.
+stp は(nwam のとき) chdir しなくなった. 引き数のitb ファイルはカレントディレクトリからの相対パスで指定可能. (geta32u の場合は絶対パスでなければならない)
+handle に \ が使えなくなった. 現在のルールは [^\./\\][^/\\]* (040-177)
+inf2xml: stp に統合された
+stp: -i, /sti を廃止
+gss3: xfss-downsample="yes" を追加.
+gss3: cs-type でクラスタリングタイプを指定可能 (CS_HBC, CS_KM)
+relay.conf に rdr: 機能を追加.
+関数 wam_fss_gets を追加
+#body= を予約. b1 と ! を両方指定したのと同じ効果を持つ. 1文書あたり2回以上使っても良いが, 注意が必要.
+BACKLOG の指定が可能になった. default: 128. (xgetassoc 12 [-B #])
+ITB-FORMAT.TXT: ``subset of XML name'' を修正 (実は2文字目以降も `_' が使用可能だった)
+#fss.*= を予約. gss3 の a-props に指定すると全文一致用の当該セグメントを取得できる.
+	fss.0 : セグメント0
+	...
+	fss.31 : セグメント31
+@stat.*= を予約
+	stat.rol_num : 文書数 (== number-of-articles)
+	stat.col_num : 異なり単語数
+	stat.total_elem_num : DF 合計
+	stat.total_freq_sum : TF 合計
+#nfss.rmap= が衝突していた. #.rmap= に変更 (ユーザからは不可視に.)
+fss の文字コードのデフォルトを UTF8 に戻した.
+	>> 引き続き UTF32 を使用する場合には configure に --enable-ucs4fss を渡す
+TF64 のときの !.sche のフォーマットを変更
+パラメータ調整, (nwamP.h, nvmt.c)
+C-API の整理 (インクルードファイルの依存関係など)
+Mac OS X で timers がリンクできない問題を修正
+
+---- 1.0.2 Fri Jul 24 11:26:47 JST 2009
+
+csb1 のプロトタイプ宣言を修正.
+
+---- 1.0.1 Thu Jul 23 16:39:04 JST 2009
+
+xgetassoc の1桁台を tgetassoc に分離
+
+Okapi_BM25 を追加
+
+wam_get_vecが -1 ではなく 0 を返すことがあったのを修正
+
+---- 1.0.0
+
+dnwam.conf の区切り文字が : から \t に変更された.
+
+ITB の属性 @stemmer はシステムにより予約された.
+
+NWAMでは、fssでのフィルタにsetmaskを用いなくなった。
+これが、正しい動作であり、GETA版のsetmaskする動作は間違い。
+
+
+NWAM では, 属性ファイルの名前の最後に `i' が付くことはなくなった.
+wam_prop_open("titlei")
+ではなく,
+wam_prop_open("title")
+とすること.
+
+アクセスコントロール機能は削除された.
+##アクセスコントロール機能が付いた. (ACCESSCONTROL.TXT を見よ)
+
+##gss3: 属性 xuser= で好きなユーザを指定できる. ただし,
+##スーパーユーザで認証されていなければならない.
+##スーパーユーザは ./configure により変更できる.
+
+--
+
+tar fomrat は事実上廃止された。
+##tar format の時に, .frq, .inf は それぞれ .@frq, .@inf としなければ
+##ならなくなった.
+
+予約されていた(文書の)属性 itb, inf, frq はもは予約されていない.
+よって, 現在予約されているのは `id', `score', `name', `vec' である.
+
+コーパスの属性 (itb ファイルの先頭(tar format の時の .@inf) に書くもの)
+で, @number-of-articles== が新たに予約された.
+よって, 現在予約されているものは
+@name=, @properties=, @created=, @number-of-articles=, @stemmer= である.
+@title= はユーザが指定しなければならない.
+
+--
+
+廃止された see above
+##コーパスの属性に
+##@owner=, @cgroup= を指定することでアクセスコントロールが可能になった.
+##(docs/ITB-FORMAT.TXT を見よ.)
+
+--
+
+filter expression= を実装.
+
+itb-format の1行の長さの上限は廃止された. 処理系依存である.
+
+xstage=2 で連想の後半を実行可能.
+
+only-stage1 は廃止された. xstage を見よ.
+
+.itb ファイルの変更: メタ情報が先頭に付く
+<	(tar で固めた時は, *.inf というファイルにこの内容を入れる)
+>	(tar で固めた時は, *.@inf というファイルにこの内容を入れる)
+	この内容はcatalogueに現れる.
+
+@title=Encyclopedia Galactica
+iC00000001
+#title=Aye-aye
+#link=http://example.com/eg/id=C00000001
+b1Monkey
+
+
+type `inf' is reserved for meta information.
+type `vec' is reserved for feature vector.
+
+all typenames which start with a `@' is reserved by the system.
+
+
+handle that begins with `.' is reserved by the system.
+
+
+limitation: only monolithic GETA is supported by current system.
+
+--
+$Id: CHANGES.TXT,v 1.55 2011/10/24 09:40:55 nis Exp $

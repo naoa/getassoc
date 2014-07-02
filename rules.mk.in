@@ -1,0 +1,14 @@
+#	$Id: rules.mk.in,v 1.8 2010/12/14 09:24:27 nis Exp $
+
+QCPP=@CXMLDIR@/bin/qcpp
+SIMCOMP=$(BIN)/simcomp
+
+.SUFFIXES: .q .sim .$(DLS_EXT)
+
+.q.c:
+	rm -f $*.c && $(QCPP) -o $*.c $*.q && chmod -w $*.c
+
+.sim.$(DLS_EXT):
+	$(SIMCOMP) -o $*.c $*.sim
+	$(CC) $(CFLAGS) -c $*.c
+	$(CC) -o $@ $*.o $(DLLDFLAG)

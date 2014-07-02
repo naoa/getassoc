@@ -1,0 +1,1 @@
+smartaw ::= log1p(Nr(w) / DF(.|d)) / DF(.|q) \sum_t (1 + log(TF(t|d))) / (1 + log(TF(.|t) / DF(.|t))) .

@@ -1,0 +1,97 @@
+@title=a small test data
+i0000
+#title=T0000
+#link=L0000
+!0000
+i0001
+#title=T0001
+#link=L0001
+!0001
+ A
+i0010
+#title=T0010
+#link=L0010
+!0010
+ B
+i0011
+#title=T0011
+#link=L0011
+!0011
+ A
+ B
+i0100
+#title=T0100
+#link=L0100
+!0100
+ C
+i0101
+#title=T0101
+#link=L0101
+!0101
+ A
+ C
+i0110
+#title=T0110
+#link=L0110
+!0110
+ B
+ C
+i0111
+#title=T0111
+#link=L0111
+!0111
+ A
+ B
+ C
+i1000
+#title=T1000
+#link=L1000
+!1000
+ D
+i1001
+#title=T1001
+#link=L1001
+!1001
+ A
+ D
+i1010
+#title=T1010
+#link=L1010
+!1010
+ B
+ D
+i1011
+#title=T1011
+#link=L1011
+!1011
+ A
+ B
+ D
+i1100
+#title=T1100
+#link=L1100
+!1100
+ C
+ D
+i1101
+#title=T1101
+#link=L1101
+!1101
+ A
+ C
+ D
+i1110
+#title=T1110
+#link=L1110
+!1110
+ B
+ C
+ D
+i1111
+#title=T1111
+#link=L1111
+!1111
+ A
+ B
+ C
+ D

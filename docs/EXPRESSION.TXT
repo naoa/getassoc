@@ -1,0 +1,114 @@
+1. Overview
+
+Association result (stage-1) can be filtered by a bool expression,
+given by <filter expression="..." /> node.
+
+2. Description
+
+2.1 Expression Syntax
+
+A Bool expression consists of keywords, constants and operators.
+Whitespaces may be used anywhere.
+
+2.1.1 Operands
+
+A keyword is a 
+There are two constants, `T' and `F',
+they stand for `true' and `false', respectively.
+
+2.1.2 Operators
+
+There are three operators, `&', `|', and `!',
+stand for `and', `or', and `not' respectively.
+Parentheses may be used to change operator preferences.
+Operator associates always left to right.
+
+2.2. Semantics
+
+If a keyword of an expression appears in a found article,
+the value of keyword in the expression would be true.
+Othersize the value would be false.
+
+
+bex_wsh は, query に現れる単語に加えて, 
+指定されたブール式に現れる id についても検索を行います.
+ただし,
+ブール式と query の両方に現れる単語は重みの計算には用いられますが,
+ブール式での重みの指定は無視されます.
+ブール式には, query に現れない単語を使用しても構いませんが,
+ブール式のみに現れる単語は, 重みの計算には用いられません.
+
+トータル件数, TF_dは, ブール式にのみ現れる単語しか含まない文書の数も含みます.
+
+bex_wsh は見つけた文書について, 
+その文書に現れる単語を真, そうでない単語を偽として, 
+ブール式を評価した結果が真になった文書だけを集めます.
+
+query にしか現れない (ブール式には現れない) 単語は,
+ブール式では don't care になります. その単語は含まれても
+含まれなくても判定結果には関係しません.
+
+検索される文書は, query とブール式に現れるいずれかの単語を含むもののみです.
+
+したがって,
+特に間違い易い場合として,
+単語を直接修飾している否定が, ``その単語を含まない文書'' ではなく,
+``検索された文書のうち, その単語を含まない文書'' になる
+というものがあります. 
+
+# note 1: ``その単語を含まない文書'' を検索する
+# わけではないので, ``その単語を含まない文書'' 全てがブール式による
+# フィルタリングを受けることにはならないのです.
+
+# note2: もっと正確には, ある検索された文書について, その単語を含んでいると
+# その項は偽になる, ですが...
+
+# note3: ブール式のみに出現し, そのすべての出現で否定がついて現れる単語を
+# 含む文書も, 検索されることに注意して下さい.
+# 状況によっては, この動作が検索性能に影響するかもしれません.
+
+A1. Syntax
+
+expression	: a_expr
+		;
+
+a_expr		: m_expr
+		| m_expr '|' a_expr
+		;
+
+m_expr		: n_expr
+		| n_expr '&' n_expr
+
+n_expr		: f_expr
+		| '!' f_expr
+		;
+
+f_expr		: keyword
+		| 'T'
+		| 'F'
+		| '(' exprssion ')'
+		;
+
+keyword		: ""
+		| "chars"
+		;
+
+chars		: char
+		| chars char
+		;
+
+char		: any-Unicode-except-"-or-\
+		| \"
+		| \\
+		;
+
+A2. Example
+
+<assoc	a-offset="0" a-props="title" nacls="1" narticles="16"
+	nkcls="1" nkeywords="4" target="testpat"
+	><article vec='[["fantasy",1]]'
+	/><filter expression='"magic" &amp; !("trick"|"dragon")'
+/></assoc>
+
+--
+$Id: EXPRESSION.TXT,v 1.4 2010/01/28 22:37:17 nis Exp $

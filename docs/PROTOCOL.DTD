@@ -1,0 +1,186 @@
+XMLNS = http://gss3.cs.nii.ac.jp/
+
+<!DOCTYPE gss [
+
+<!-- gss3 envelope -->
+<!ELEMENT gss (getprop | assoc | inquire | result) >
+<!ATTLIST gss version "3.0" #REQUIRED
+	      user-time CDATA #IMPLIED >
+
+
+<!-- get property lists by-name -->
+<!ELEMENT getprop (article | keyword)* >
+<!ATTLIST getprop target CDATA #REQUIRED
+                  a-prop CDATA #REQUIRED
+		  <!-- xuser CDATA #IMPLIED -->
+	>
+
+<!ELEMENT article EMPTY >
+<!ATTLIST article name CDATA #REQUIRED >
+
+<!ELEMENT keyword EMPTY >
+<!ATTLIST keyword name CDATA #REQUIRED >
+
+<!-- result of getprop -->
+<!ELEMENT result (article | keyword)* >
+<!ATTLIST result status CDATA #REQUIRED
+		 reason CDATA #IMPLIED
+		 note CDATA #IMPLIED >
+
+<!ELEMENT article EMPTY >
+<!ATTLIST article name CDATA #REQUIRED
+		  vec CDATA #IMPLIED
+		  * CDATA #IMPILED >
+
+<!ELEMENT keyword EMPTY >
+<!ATTLIST keyword name CDATA #REQUIRED
+		  vec CDATA #IMPLIED
+		  * CDATA #IMPILED >
+
+
+<!-- get association of articles/keywords -->
+
+<!ELEMENT assoc ((freetext | article | keyword)*, filter?) >
+<!ATTLIST assoc target CDATA #REQUIRED
+		narticles CDATA #REQUIRED
+		nkeywords CDATA #REQUIRED
+		stage1-sim CDATA "WT_SMART_AW"
+		stage2-sim CDATA "WT_SMART_WA"
+		stage3-sim CDATA "WT_SMART_AW"
+		cs-type CDATA "CS_HBC"	<!-- "CS_K_MEANS" -->
+		cs-vsim CDATA "WT_SMART" <!-- cs-type == CS_K_MEANS ? WT_NONE : WT_SMART -->
+		cs-sim CDATA "WT_SMART"
+		nacls CDATA "1"
+		nkcls CDATA "1"
+		a-offset CDATA "0"
+		a-props CDATA #REQUIRED
+		cross-ref ("" | "aw" | "wa" | "aa" | "ww" | "aw,wa" ... ) ""
+		niwords CDATA "70"
+		yykn CDATA "10"
+		xstage ("" | "1" | "2") ""
+		cutoff-df CDATA "*"
+		<!-- xuser CDATA #IMPLIED -->
+		dbginfo CDATA "no"
+		direction CDATA "row"   <!-- "col" -->
+		xfss-downsample CDATA ("no" | "yes")
+	>
+<!-- *: for default value of cutoff-df, see PROTOCOL.TXT -->
+
+<!ELEMENT freetext (#PCDATA) >
+<!ATTLIST freetext stemmer CDATA #IMPLIED
+		   cutoff-df CDATA #IMPLIED >
+<!--		   lang CDATA #IMPLIED  -  deprecated -->
+
+<!ELEMENT article EMPTY >
+<!ATTLIST article name CDATA #IMPLIED
+		  source CDATA #IMPLIED
+		  vec CDATA #IMPLIED
+		  cutoff-df CDATA #IMPLIED
+		  TFd CDATA #IMPLIED  <!-- TFd is used in xstage=2 mode -->
+		  score CDATA #IMPLIED > <!-- score is used in xstage=2 mode -->
+
+<!ELEMENT keyword EMPTY >
+<!ATTLIST keyword name CDATA #IMPLIED
+		  source CDATA #IMPLIED
+		  vec CDATA #IMPLIED
+		  cutoff-df CDATA #IMPLIED
+		  TFd CDATA #IMPLIED  <!-- TFd is used in xstage=2 mode -->
+		  score CDATA #IMPLIED > <!-- score is used in xstage=2 mode -->
+
+<!ELEMENT filter (search?) >
+<!ATTLIST filter expression CDATA #IMPLIED >
+
+<!ELEMENT search (join)* >
+<!ATTLIST search options CDATA #IMPLIED >
+
+<!ELEMENT join (p|n)* >
+<!ATTLIST join options CDATA #IMPLIED
+	       segments CDATA #IMPILED >
+
+<!ELEMENT p (#PCDATA) >
+<!ATTLIST p options CDATA #IMPLIED
+	    segments CDATA #IMPILED >
+
+<!ELEMENT n (#PCDATA) >
+<!ATTLIST n options CDATA #IMPLIED
+	    segments CDATA #IMPILED >
+
+
+<!-- result of assoc -->
+
+<!ELEMENT result (articles, keywords, dbginfo?) >
+<!ATTLIST result status CDATA #REQUIRED >
+
+<!ELEMENT articles (cls)* >
+<!ATTLIST articles total CDATA #REQUIRED >
+
+<!ELEMENT keywords (cls)* >
+<!ATTLIST keywords total CDATA #REQUIRED >
+
+<!ELEMENT cls (article* | keyword*) >
+
+<!ELEMENT article (cross-ref?, dbginfo?) >
+<!ATTLIST article name CDATA #REQUIRED
+		  score CDATA #REQUIRED
+		  title CDATA #IMPLIED
+		  link CDATA #IMPLIED >
+
+<!ELEMENT keyword (cross-ref?) >
+<!ATTLIST keyword name CDATA #REQUIRED
+		  score CDATA #REQUIRED >
+
+<!ELEMENT cross-ref (keyword* | article*) >
+
+<!ELEMENT dbginfo EMPTY >
+<!ATTLIST dbginfo iwords CDATA #IMPLIED
+		  iw-weights CDATA #IMPLIED >
+
+
+<!-- result of assoc/xstage="1" -->
+
+<!ELEMENT result (article* | keyword*) >
+<!ATTLIST result status CDATA #REQUIRED >
+
+<!ELEMENT article EMPTY >
+<!ATTLIST article name CDATA #REQUIRED
+		  score CDATA #REQUIRED
+		  TFd CDATA #REQUIRED >
+
+<!ELEMENT keyword EMPTY >
+<!ATTLIST keyword name CDATA #REQUIRED
+		  score CDATA #REQUIRED
+		  TFd CDATA #REQUIRED >
+
+
+<!-- inquire -->
+
+<!ELEMENT inquire EMPTY >
+<!ATTLIST inquire type CDATA #REQUIRED
+		  <!-- xuser CDATA #IMPLIED -->
+	>
+
+
+<!-- result of inquire/catalogue -->
+
+<!ELEMENT result (corpus)* >
+<!ATTLIST result status CDATA #REQUIRED >
+
+<!ELEMENT corpus EMPTY >
+<!ATTLIST corpus name CDATA #REQUIRED
+		 title CDATA #IMPLIED
+		 properties CDATA #IMPLIED
+		 created CDATA #IMPLIED
+		 * CDATA #IMPLIED >
+
+
+<!ELEMENT result (gss-server)* >
+<!ATTLIST result status CDATA #REQUIRED >
+
+<!ELEMENT gss-server EMPTY >
+<!ATTLIST gss-server name CDATA #REQUIRED
+		     uri CDATA #REQUIRED
+		     flags CDATA #IMPLIED >
+
+]>
+
+<!--$Id: PROTOCOL.DTD,v 1.19 2010/11/06 03:39:23 nis Exp $-->

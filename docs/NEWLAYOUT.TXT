@@ -1,0 +1,61 @@
+If getassoc is configured with --enable-newlayout=yes,
+shareable binaries and data files are installed in common area,
+where specified with --prefix.
+
+$prefix/bin -- commands that user uses in first hand
+	simcomp		similarity compiler
+	stp		WAM setup wrapper to xgetassoc
+	tgetassoc	standalone self-testing tools
+	wtouch		toches WAM to make be cached
+
+$prefix/include/getassoc -- include files
+	nwam.h
+	simdef.h
+
+$prefix/lib -- libraries
+	libnwam.{a,so,dylib}
+	*.{so,bundle}	compiled similarity
+
+$prefix/libexec/getassoc -- programs that are called from another program
+	getassoc	cgi-bin entry program
+	otmi2itb	called from stp, to convert OTMI-format into ITB-format
+	tsv2itb		called from stp, to convert TSV-format into ITB-format
+	xgetassoc	called from stp, to make WAM
+
+$prefix/share/
+	share/getassoc/*
+
+On the other hand, user provided data may placed anywhere user likes.
+Assume the directory be $getaroot.
+The catalogue file, temporary file, WAM, distributed-WAM are created
+into $getaroot/etc, $getaroot/tmp, $getaroot/nwam, $getaroot/pwam respectively.
+
+Futhermore, a wrapper of cgi-bin entry program is also placed here,
+typically, $getaroot/bin/getassoc.
+The warpper program is a short shell script that just call the
+cgi-bin entry program, with an argument.
+The argument tells cgi-bin entry program where the $getaroot is
+(see sample below).
+
+Any file which does not conflict with above may put here,
+such as dnwam.conf and rcfile.
+
+$getaroot/bin
+	getassoc	wrapper for cgi-bin entry program
+
+$getaroot/etc
+	catalogue.xml	catalogue of intalled WAM
+	dnwam.conf	distributed-WAM configuration file
+	rcfile		a file that supplies defalut values to gss3.
+
+$getaroot/tmp -- working directory
+
+$getaroot/nwam -- installed WAM
+
+$getaroot/pwam -- installed distributed-WAM
+	m.n		WAM which contains m'th portion of document subset and n'th portion of word subset.
+
+
+$getaroot/bin/getassoc -- a wrapper
+#! /bin/sh
+exec $prefix/libexec/getassoc/getassoc -R $getaroot

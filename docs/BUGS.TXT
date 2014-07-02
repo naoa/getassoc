@@ -1,0 +1,4 @@
+Win32:
+	no-proxy
+	(stmd) no exts
+	stp cannot read from stdin

@@ -1,0 +1,12 @@
+ILP32:
+	max line size: 1MB
+	FSS => 1.5GB
+
+
+LP64:
+	max line size: 128MB
+	FSS => 24GB
+
+
+LLP64:
+	NG

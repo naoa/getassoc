@@ -1,0 +1,56 @@
+★技術資料
+
+geta.h
+  + <inttypes.h>
+  + <geta/dtypes.h>
+  + <geta/nlog.h>
+  + <geta/dwut.h>
+  + <geta/timer.h>
+  + <geta/dw.h>
+  + <geta/dci.h>
+  + <geta/dcw.h>
+  + <geta/dxr.h>
+  + <geta/daui.h>
+  + <geta/dwwt.h>
+  + <geta/dwsh.h>
+  + <geta/dwc.h>
+  + <geta/dwsched.h>
+  + <geta/dwam.h>
+  + "sgetassoc.h"
+  + "assv.h"
+  + "xstrcmp.h"
+  + "fss.h"
+
+gifnoc.h
+  + <mdbg.h>
+
+nrpc.h
+  + "marshal.h"
+
+nwam.h
+  + <inttypes.h>
+  + "sgetassoc.h"
+  + "simdef.h"
+  + "assv.h"
+  + "geta.h"
+  + "xstrcmp.h"
+  + "fss.h"
+
+nwamP.h
+  + <pthread.h>
+  + <semaphore.h>
+  + "nwdb.h"
+
+xsimdef.h
+  + <config.h>
+  + <sys/param.h>
+  + <sys/time.h>
+  + <assert.h>
+  + <stdio.h>
+  + <stdlib.h>
+  + <string.h>
+  + <strings.h>
+  + <math.h>
+  + "nwam.h"
+  + "assvP.h"
+  + <gifnoc.h>

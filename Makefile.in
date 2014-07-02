@@ -1,0 +1,451 @@
+#	$Id: Makefile.in,v 1.209 2011/10/24 09:59:20 nis Exp $
+
+#
+# Copyright (c) 2006 Shingo Nishioka.
+# All rights reserved.
+#
+
+@SET_MAKE@
+
+SHELL=@SHELL@
+CC=@CC@
+CXX=@CXX@
+CFLAGS+=-I.
+CFLAGS+=@CFLAGS@
+#CFLAGS+=-ansi -pedantic
+CFLAGS+=-Wall -Wno-parentheses -Wdeclaration-after-statement -g -O
+LDFLAGS=@LDFLAGS@
+INSTALL=@INSTALL@
+LIBS=@LIBS@
+YACC=@YACC@
+RANLIB=@RANLIB@
+LIBTOOL=@LIBTOOL@
+AR=ar
+
+prefix=@prefix@
+includedir=@includedir@
+datadir=@datarootdir@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+bindir=@bindir@
+libexecdir=@libexecdir@
+top_builddir=@top_builddir@
+
+include config.mk
+
+LINK=$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) $(LDFLAGS)
+
+@IFEMPTY@ENABLE_DARWIN_DLSIM@EFI@
+SO_EXT=so
+DLS_EXT=so
+@ELSE@
+SO_EXT=dylib
+DLS_EXT=bundle
+NWAM_MAJOR=1
+NWAM_MINOR=1
+NWAM_RELEASE=5
+@ENDIF@
+
+include rules.mk
+
+DATADIRNAME=getassoc
+@IFNEMPTY@ENABLE_NEWLAYOUT@EFI@
+BIN=$(bindir)
+LIBEXEC=$(libexecdir)/getassoc
+CFLAGS+='-DLIBEXEC="$(LIBEXEC)"'
+CFLAGS+='-DDATADIR="$(datadir)/getassoc"'
+@ELSE@
+BIN=${prefix}/wbin
+LIBEXEC=${prefix}/wbin
+CFLAGS+='-DLIBEXECDIRNAME="wbin"'
+CFLAGS+='-DXDATADIRNAME="share/getassoc"'
+@ENDIF@
+#### XXX / => directory_delimiter
+
+@IFNEMPTY@ANSI_SOURCE@EFI@
+CFLAGS+=-D_BSD_SOURCE
+CFLAGS+=-D_POSIX_C_SOURCE=200112L
+CFLAGS+=-D_XOPEN_SOURCE=600
+CFLAGS+=-D_XOPEN_SOURCE_EXTENDED=1
+@ENDIF@
+
+@IFEMPTY@ENABLE_GETA@EFI@
+@IFNEMPTY@ENABLE_UTF32FSS@EFI@
+CFLAGS+=-DFLWD_UTF32=1
+CFLAGS+=-DCACHE_PREFETCH=1
+@ENDIF@
+@IFNEMPTY@ENABLE_RIGIDSTRCMP@EFI@
+CFLAGS+=-DRIGIDSTRCMP=1
+@ENDIF@
+@IFNEMPTY@ENABLE_INDEXP@EFI@
+CFLAGS+=-DENABLE_INDEXP=1
+@ENDIF@
+@IFNEMPTY@ENABLE_NEWLAYOUT@EFI@
+CFLAGS+=-DENABLE_NEWLAYOUT=1
+@ENDIF@
+@IFNEMPTY@ENABLE_UNIQUIFY@EFI@
+CFLAGS+=-DENABLE_UNIQUIFY=1
+@ENDIF@
+@ENDIF@
+CFLAGS+=-DENABLE_RAWVECLEN_LIMIT=1
+
+CFLAGS+='-DPREFIX="@prefix@"'
+CFLAGS+='-DBIN_PAX="@PROG_PAX@"'
+CFLAGS+='-DBIN_MV="@PROG_MV@"'
+CFLAGS+='-DBIN_RM="@PROG_RM@"'
+CFLAGS+='-DBIN_UNCOMPRESS="@PROG_UNCOMPRESS@"'
+CFLAGS+='-DBIN_GZIP="@PROG_GZIP@"'
+CFLAGS+='-DBIN_BZIP2="@PROG_BZIP2@"'
+
+CFLAGS+=@EVAL_BEGIN@@ICUCONFIG@ --cflags@EVAL_END@
+CFLAGS+=@EVAL_BEGIN@@ICUCONFIG@ --cppflags@EVAL_END@
+
+LDFLAGS+=@EVAL_BEGIN@@ICUCONFIG@ --ldflags-searchpath@EVAL_END@
+#LDFLAGS+=@EVAL_BEGIN@@ICUCONFIG@ --ldflags@EVAL_END@
+
+@IFNEMPTY@SGETAROOT@EFI@
+CFLAGS+='-DSTATIC_GETAROOT="$(SGETAROOT)"'
+@ENDIF@
+#CFLAGS+=-DENV_GETAROOT
+CFLAGS+='-DSTMDBIN="@STMDDIR@/bin/stmd"'
+CFLAGS+='-DSTMDHOST="@STMDHOST@"'
+CFLAGS+='-DSTMDSERV="@STMDSERV@"'
+CFLAGS+='-DSTMDLOCALSOCKET="@STMDLOCALSOCKET@"'
+CFLAGS+='-DRN_METADB_URL="@RN_METADB_URL@"'
+CFLAGS+='-DCSTMPATH="/stmd/"'
+CFLAGS+='-DCSTMHOST="localhost"'
+CFLAGS+='-DCSTMSERV="80"'
+
+@IFNEMPTY@ENABLE_ALLOWERROR@EFI@
+CFLAGS+=-DALLOW_ERROR=1000000
+@ENDIF@
+
+CFLAGS+=-I@CXMLDIR@/include
+CFLAGS+=-I@EXPATDIR@/include
+
+ESHKDIR=@ESHKDIR@
+
+@IFNEMPTY@ESHKDIR@EFI@
+CFLAGS+=-I@ESHKDIR@
+CFLAGS+=-DHAVE_ESHK_H=1
+@ENDIF@
+
+XFSSNCPU=@XFSSNCPU@
+
+@IFNEMPTY@XFSSNCPU@EFI@
+CFLAGS+=-DXFSS_NCPU=$(XFSSNCPU)
+@ENDIF@
+
+@IFEMPTY@ENABLE_GETA@EFI@
+LIBS+=-L. -lnwam
+@ELSE@
+CFLAGS+=-I${includedir}
+LIBS+=-L${libdir} -ldw -ldwut
+CFLAGS+=-DENABLE_GETA=1
+CFLAGS+=-DMKRI_NCPU=@MKRI_NCPU@
+@ENDIF@
+LIBS+=@EVAL_BEGIN@@ICUCONFIG@ --ldflags@EVAL_END@
+LIBS+=-L@EXPATDIR@/lib -lexpat
+LIBS+=-lm
+
+#LIBS+=-lgmp
+
+@IFNEMPTY@XFORK@EFI@
+CFLAGS+=-DX_FORK=1
+@ENDIF@
+
+@IFNEMPTY@XPTHREAD@EFI@
+CFLAGS+=-DX_PTHREAD=1
+@ENDIF@
+
+RN=
+@IFNEMPTY@ENABLE_REN@EFI@
+CFLAGS+=-DENABLE_REN=1
+RN=rn/rn.js
+@ENDIF@
+
+@IFNEMPTY@ENABLE_PROXY@EFI@
+CFLAGS+=-DENABLE_PROXY=1
+@ENDIF@
+
+MKRI=mkri
+ITB2FRQ=itb2frq
+@IFEMPTY@ENABLE_GETA@EFI@
+LIBNWAM_A=libnwam.a
+MKRI=
+ITB2FRQ=
+SCOMP=
+LIBDIR=${prefix}/lib
+@IFNEMPTY@ENABLE_SHARED@EFI@
+CFLAGS+=-fPIC -fno-common
+@IFEMPTY@ENABLE_DARWIN_DLSIM@EFI@
+LIBNWAM_SO=libnwam.$(SO_EXT)
+SHLDFLAG=-shared
+LDFLAGS+=-L$(LIBDIR) -Wl,--rpath=$(LIBDIR)
+@ELSE@
+LIBNWAM_SO=libnwam.$(NWAM_MAJOR).$(NWAM_MINOR).$(NWAM_RELEASE).$(SO_EXT)
+LIBNWAM_SO_PLAIN=libnwam.$(SO_EXT)
+LIBNWAM_SO_MAJOR=libnwam.$(NWAM_MAJOR).$(SO_EXT)
+SHLDFLAG=-dynamiclib -Wl,-install_name,$(LIBDIR)/$(LIBNWAM_SO),-compatibility_version,$(NWAM_MAJOR).$(NWAM_MINOR),-current_version,$(NWAM_MAJOR).$(NWAM_MINOR).$(NWAM_RELEASE),$(LIBS) -lc
+LDFLAGS+=-L$(LIBDIR) -Wl,-rpath,$(LIBDIR)
+@ENDIF@
+@ENDIF@
+@IFNEMPTY@ENABLE_DLSIM@EFI@
+DLSIMDIR=${prefix}/lib
+CFLAGS+=-DENABLE_DLSIM=1
+CFLAGS+=-fPIC -fno-common
+CFLAGS+='-DDLS_DIRNAME="$(DLSIMDIR)"'
+CFLAGS+='-DDLS_EXT=".$(DLS_EXT)"'
+CFLAGS+='-DDLSFN_PREFIX="DLSIM_FN_"'
+SCOMP=simcomp
+@IFEMPTY@ENABLE_DARWIN_DLSIM@EFI@
+DLLDFLAG=-shared
+@ELSE@
+DLLDFLAG=-Wl,-bundle,-flat_namespace,-undefined,suppress
+@ENDIF@
+@ENDIF@
+@ENDIF@
+
+@IFNEMPTY@ENABLE_LP64@EFI@
+CFLAGS+=-DENABLE_LP64=1
+@ENDIF@
+
+@IFNEMPTY@ENABLE_MDBG@EFI@
+CFLAGS+=-DENABLE_MDBG=1
+@ENDIF@
+
+@IFNEMPTY@ENABLE_DB@EFI@
+CFLAGS+=-DENABLE_DB=1
+@ENDIF@
+
+SP=sp
+SP=
+
+all: $(LIBNWAM_A) $(LIBNWAM_SO) getassoc xgetassoc tgetassoc stp $(ITB2FRQ) $(MKRI) dumpri otmi2itb tsv2itb $(RN) $(SP) $(SCOMP) wtouch
+
+COMOBJ=xstem.o cstem.o http.o nnet.o text2vec.o print.o \
+	smartaa.o assv.o simdef.o simv.o hd.o \
+	mapfile.o readln.o nio.o \
+	splitv.o fss.o xstrcmp.o brsearch.o timer.o
+
+@IFEMPTY@ENABLE_GETA@EFI@
+GA_COMOBJ=
+NW_COMOBJ=$(COMOBJ)
+@ELSE@
+GA_COMOBJ=$(COMOBJ)
+NW_COMOBJ=
+@ENDIF@
+
+SORT_PCOMPAR=xsort_pcompar.o tpsort_pcompar.o
+
+GAOBJ=gss3.o sct.o rn.o common.o \
+	gorjparse.o cxml.o \
+	$(GA_COMOBJ) downsample.o \
+	maxrlimit.o nstring.o strip2.o 1342.o
+
+NWOBJ=nwam.o ncs.o xgserv.o \
+	$(NW_COMOBJ) ncompar.o \
+	nht.o nvmt.o nwdb.o diag.o bx.o bxutil.o priq.o marshal.o nrpc.o \
+	mkri.o fsort.o pi.o sigflg.o \
+	$(SORT_PCOMPAR)
+
+@IFEMPTY@ENABLE_GETA@EFI@
+$(LIBNWAM_A): $(NWOBJ)
+	-rm -f $@
+	$(AR) q $@ @ALLSRC@
+	$(RANLIB) $@
+@IFNEMPTY@ENABLE_SHARED@EFI@
+$(LIBNWAM_SO): $(NWOBJ)
+	-rm -f $@
+	$(CC) -o $@ @ALLSRC@ $(SHLDFLAG)
+	mkdir -p $(LIBDIR)
+#	$(INSTALL) -c -m 555 $(LIBNWAM_SO) $(LIBDIR)
+#@IFNEMPTY@LIBNWAM_SO_MAJOR@EFI@
+#	rm -f $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+#	ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+#	rm -f $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+#	ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+#@ENDIF@
+#@IFNEMPTY@LIBNWAM_SO_PLAIN@EFI@
+#	if [ ! -e $(LIBDIR)/$(LIBNWAM_SO_PLAIN) ] ; then ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_PLAIN); fi
+#@ENDIF@
+@ENDIF@
+@ENDIF@
+
+getassoc: getassoc.o $(GAOBJ) $(LIBNWAM_A) $(LIBNWAM_SO)
+	$(LINK) -o $@ getassoc.o $(GAOBJ) $(LDFLAGS) $(LIBS)
+
+xgetassoc: xgetassoc.o $(GAOBJ) $(LIBNWAM_A) $(LIBNWAM_SO)
+	$(LINK) -o $@ xgetassoc.o $(GAOBJ) $(LDFLAGS) $(LIBS)
+
+tgetassoc: tgetassoc.o $(GAOBJ) $(LIBNWAM_A) $(LIBNWAM_SO)
+	$(LINK) -o $@ tgetassoc.o $(GAOBJ) $(LDFLAGS) $(LIBS)
+
+stp: stp.o cata.o traverse.o archive.o sutil.o systemv.o \
+	readln.o maxrlimit.o splitv.o strip2.o diag.o xchar.o timer.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+@IFNEMPTY@ENABLE_GETA@EFI@
+itb2frq: itb2frq.o xstem.o nnet.o readln.o nio.o diag.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+@ENDIF@
+
+mkri.o: mkri.c timer.o
+	$(CC) -c -o $@ mkri.c $(CFLAGS) $(MKRI_OPTS)
+
+mkri: mmkri.o \
+	mkri.o fss.o xstrcmp.o brsearch.o \
+	mapfile.o maxrlimit.o splitv.o fsort.o diag.o pi.o \
+	$(SORT_PCOMPAR) timer.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+dumpri: dumpri.o \
+	fss.o xstrcmp.o brsearch.o \
+	mapfile.o splitv.o timer.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+otmi2itb: otmi2itb.o nstring.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+tsv2itb: tsv2itb.o readln.o csv.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+wtouch: wtouch.o mapfile.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+gorjparse.c: gorjparse.y
+	$(YACC) -o $@ @ALLSRC@
+
+@IFEMPTY@ENABLE_GETA@EFI@
+@IFNEMPTY@ENABLE_DLSIM@EFI@
+simcomp: simcomp.o
+	$(LINK) -o $@ @ALLSRC@ $(LDFLAGS) $(LIBS)
+
+simcomp.c: simcomp.y
+	$(YACC) -o $@ @ALLSRC@
+
+smart.$(DLS_EXT): smart.sim
+smartaw.$(DLS_EXT): smartaw.sim
+smartwa.$(DLS_EXT): smartwa.sim
+tfidf.$(DLS_EXT): tfidf.sim
+tf.$(DLS_EXT): tf.sim
+hits.$(DLS_EXT): hits.sim
+
+install-dlsim-so: install-dlsim
+install-dlsim: smart.$(DLS_EXT) smartaw.$(DLS_EXT) smartwa.$(DLS_EXT) tfidf.$(DLS_EXT) tf.$(DLS_EXT) hits.$(DLS_EXT)
+	mkdir -p $(DLSIMDIR)
+	$(INSTALL) smart.$(DLS_EXT) $(DLSIMDIR)
+	$(INSTALL) smartaw.$(DLS_EXT) $(DLSIMDIR)
+	$(INSTALL) smartwa.$(DLS_EXT) $(DLSIMDIR)
+	$(INSTALL) tfidf.$(DLS_EXT) $(DLSIMDIR)
+	$(INSTALL) tf.$(DLS_EXT) $(DLSIMDIR)
+	$(INSTALL) hits.$(DLS_EXT) $(DLSIMDIR)
+@ENDIF@
+@ENDIF@
+
+gss3.c: gss3.q
+
+sct.c: sct.q
+
+mkrootdb: mkrootdb.o splitv.o
+	$(LINK) -o $@ @ALLSRC@
+
+@IFNEMPTY@ENABLE_REN@EFI@
+rn/rn.js: mkrootdb @RN_MASTER_DB@ rn/librn.js rn/libgss3.js rn/main.js
+	-chmod +w $@
+	cat @RN_MASTER_DB@ | ./mkrootdb rn/librn.js rn/libgss3.js rn/main.js > $@
+	-chmod a-w $@
+@ENDIF@
+
+clean:
+	rm -f getassoc xgetassoc tgetassoc stp $(ITB2FRQ) $(MKRI) dumpri otmi2itb tsv2itb wtouch
+	rm -f *.a *.o *.core gorjparse.c *.gmon
+	rm -f $(LIBNWAM_A)
+@IFEMPTY@ENABLE_GETA@EFI@
+@IFNEMPTY@ENABLE_SHARED@EFI@
+	rm -f $(LIBNWAM_SO)
+@ENDIF@
+@IFNEMPTY@ENABLE_DLSIM@EFI@
+	rm -f simcomp simcomp.c
+	rm -f smart.c smart.o smart.$(DLS_EXT)
+	rm -f smartaw.c smartaw.o smartaw.$(DLS_EXT)
+	rm -f smartwa.c smartwa.o smartwa.$(DLS_EXT)
+	rm -f tfidf.c tfidf.o tfidf.$(DLS_EXT)
+	rm -f tf.c tf.o tf.$(DLS_EXT)
+	rm -f hits.c hits.o hits.$(DLS_EXT)
+@ENDIF@
+@ENDIF@
+
+distclean: clean
+	rm -f nwam.h config.h config.mk libtool config.log tags config.status
+	rm -f Makefile rules.mk docs/INSTALL ssetup
+	rm -f mkrootdb rn/rn.js
+
+install: all
+	mkdir -p $(BIN)
+	mkdir -p $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s getassoc $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s xgetassoc $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s tgetassoc $(BIN)
+	$(INSTALL) -c -m 555 -s stp $(BIN)
+@IFNEMPTY@ENABLE_GETA@EFI@
+	$(INSTALL) -c -m 555 -s itb2frq $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s mkri $(LIBEXEC)
+@ENDIF@
+@IFEMPTY@ENABLE_GETA@EFI@
+	mkdir -p $(libdir)
+	$(INSTALL) -c -m 644 $(LIBNWAM_A) $(libdir)
+@IFNEMPTY@ENABLE_SHARED@EFI@
+	$(INSTALL) -c -m 644 $(LIBNWAM_SO) $(libdir)
+@IFNEMPTY@LIBNWAM_SO_MAJOR@EFI@
+	rm -f $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+	ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+	rm -f $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+	ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_MAJOR)
+@ENDIF@
+@IFNEMPTY@LIBNWAM_SO_PLAIN@EFI@
+	if [ ! -e $(LIBDIR)/$(LIBNWAM_SO_PLAIN) ] ; then ln -s $(LIBNWAM_SO) $(LIBDIR)/$(LIBNWAM_SO_PLAIN); fi
+@ENDIF@
+@ENDIF@
+@IFNEMPTY@ENABLE_DLSIM@EFI@
+	$(INSTALL) -c -m 555 -s simcomp $(BIN)
+@ENDIF@
+@ENDIF@
+	$(INSTALL) -c -m 555 -s otmi2itb $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s tsv2itb $(LIBEXEC)
+	$(INSTALL) -c -m 555 -s wtouch $(BIN)
+	mkdir -p $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 sct.js $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 sct_help.html $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/search.gif $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/geta_1.gif $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/geta_2.gif $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/geta_3.gif $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/geta_4.gif $(datadir)/$(DATADIRNAME)
+	$(INSTALL) -c -m 444 img/geta_5.gif $(datadir)/$(DATADIRNAME)
+@IFNEMPTY@ENABLE_REN@EFI@
+	mkdir -p $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 img/btn_clear.gif $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 img/btn_top_imagine.gif $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 img/top_logo.gif $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 rn/rn.html $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 rn/rn.css $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 rn/rn.js $(datadir)/$(DATADIRNAME)/rn
+	$(INSTALL) -c -m 444 rn/sample.txt $(datadir)/$(DATADIRNAME)/rn
+@ENDIF@
+	mkdir -p ${includedir}/getassoc
+	$(INSTALL) -c -m 444 nwam.h ${includedir}/getassoc/
+	$(INSTALL) -c -m 444 simdef.h ${includedir}/getassoc/
+
+@IFNEMPTY@ENABLE_NEWLAYOUT@EFI@
+	echo Do not forget to create following directories: etc tmp nwam pwam
+@ELSE@
+@IFEMPTY@ENABLE_GETA@EFI@
+	mkdir -p ${prefix}/nwam
+	mkdir -p ${prefix}/etc
+	mkdir -p ${prefix}/pwam
+@ELSE@
+	mkdir -p ${prefix}/dwam
+@ENDIF@
+	mkdir -p ${prefix}/tmp
+@ENDIF@

@@ -1,0 +1,119 @@
+0. PREREQUISITES
+	C/C++
+	yacc or bison
+	apache
+	icu-3.6
+	expat-2.0.0
+	stmd
+	(cxml -- optional)
+	(GETA3.2u -- optional)
+
+
+1. configure & build
+
+	$ ./configure --prefix=$GETAROOT [options...]
+	$ make
+	$ make install
+
+    configure options:
+		* ENVIRONMENTAL OPTIONS
+		--with-expatdir=/usr/local 	eXpat prefix
+		--with-icu-config=/usr/local/bin/icu-config	ICU config
+		--with-stmddir=/usr/local 	stmd prefix
+		--with-cxmldir=/usr/local 	CXML prefix (optional)
+		--with-gmake			# specify this, if configure fails to guess what make you are using.
+
+		* INPORTANT!!!
+		--enable-lp64=yes		# [default: no] add this if your arch. is LP64
+		--enable-utf32fss=yes		# [default: no] add this to make fss-fullword to be UTF32
+
+		* specify where your stmd is waiting at.
+		--with-stmdhost=localhost
+		--with-stmdserv=stmd
+		--with-stmdlocalsocket=/tmp/stmd.sock
+		** note: if all attempts to connect a server refused,
+		   GETAssoc tries to fork & exec ${stmddir}/bin/stmd.
+
+		* if you are going run distributed GETAssoc, and some error are allowd:
+		--enable-allowerror=yes		# [default: no] strongly recommended
+
+		* if you are going to use full text search, and your host is MP
+		--enable-xpthread=yes		# [default: no] recommended
+		--enable-xfork=yes		# [default: no] if you are profiling, use this
+
+		* miscellaneous options
+		--with-eshkdir=""		# specify the location of CJK nomalization table
+		--enable-ren=yes		# [default: no] enable REN!
+		--enable-proxy=yes		# [default: no] enable proxy for REN!
+		--with-sgetaroot=$GETAROOT	GETAROOT is fixed to the given value (it will be hardwired, and binary will be not relocatable.)
+		--enable-rigidstrcmp=yes	# [default: no] use a rigid strcmp routine instead of an ambiguous match one
+
+		* use GETA3.2u instead built in geta-compatible library
+		--enable-geta=yes
+		--prefix=$GETAROOT		# in this case, you MUST specify $GETAROOT
+		--with-mkrincpu=1		# and tell the number of CPUs.
+
+		* 
+		--enable-tf64=yes		# [default: no]
+
+		* use new binary layout for pkgsrc and macport
+		--enable-newlayout=yes		# [default: no]
+
+		* to use dynamic loaded simdef's, enable the followings:
+		--enable-shared=no		# [default: yes]
+		--enable-dlsim=yes		# [default: no]
+		* and for darwin, also enable the following:
+		--enable-darwindlsim=yes	# [default: no]
+			IMPORTANT NOTE: dynamic loaded simdef's will not work with distributed setup.
+
+		* undocumented feature (should be hidden from user)
+		ENABLE_MDBG			// for developer
+		ENABLE_DB			// experimental
+		ENABLE_INDEXP			// experimental
+		ENABLE_UNIQUIFY			// experimental
+		RN_MASTER_DB
+		RN_METADB_URL
+		XFSSNCPU
+
+	the follwing directories will be created automatically (if missing):
+		@prefix@/
+			etc
+			share/getassoc
+			nwam
+			tmp
+			wbin
+
+
+
+2.  add following lines to your httpd.conf
+    Do not forget to add access permission to the directory.
+
+	ScriptAlias /getassoc/ "@prefix@/wbin/getassoc/"
+
+
+
+3. IMPORTANT: start stmd. (see stmd/INSTALL.TXT for detailed description)
+	$ /usr/local/bin/stmd -d -u /tmp/stmd.sock
+
+	(Or if you are going to use inetd only, check inetd.conf once agein.
+	 Do not forget restart inetd.)
+
+
+4. Install a sample corpus and check it works
+
+	4.1 install a sample with following command.
+	    you can find sample.itb (or sample2.itb) in this directory.
+
+	$ cat sample.itb | @prefix@/wbin/stp -b @prefix@ sample title,link
+
+	4.2 Access http://localhost/getassoc/catalogue.html
+	    You should find a corpus named "sample" which has 4 articles.
+
+	4.3 Access http://localhost/getassoc/sct/index.html
+	    type "法律" in the top textarea, and click [Search] button.
+
+
+5. enjoy!
+
+--
+$Id: INSTALL.in,v 1.33 2010/12/15 02:35:05 nis Exp $

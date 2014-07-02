@@ -1,0 +1,456 @@
+dnl test for configure.in
+
+AC_INIT(getassocP.h)
+
+AC_CONFIG_HEADER(config.h)
+AC_ARG_PROGRAM
+
+AC_PROG_LIBTOOL
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_YACC
+dnl AC_PROG_RANLIB
+
+AC_CHECK_LIB(m, log)
+AC_CHECK_LIB(dl, main)
+AC_CHECK_LIB(socket, socket)
+
+AC_CHECK_FUNCS(mkdtemp)
+AC_CHECK_FUNCS(setenv)
+AC_CHECK_FUNCS(heapsort)
+AC_CHECK_FUNCS(fts_open)
+AC_CHECK_FUNCS(nftw)
+dnl AC_CHECK_FUNCS(funopen)
+
+AC_PATH_PROG(PROG_PAX, pax)
+AC_PATH_PROG(PROG_MV, mv)
+AC_PATH_PROG(PROG_RM, rm)
+AC_PATH_PROG(PROG_UNCOMPRESS, uncompress)
+AC_PATH_PROG(PROG_GZIP, gzip)
+AC_PATH_PROG(PROG_BZIP2, bzip2)
+
+if test "$(make -v -f nonexistent>/dev/null 2>/dev/null; echo $?)" = "0"; then
+	with_gmake="yes"
+fi
+AC_ARG_WITH(gmake,
+[  --with-gmake=DIR      Enable make with GNU-make],dnl
+[mk_allsrc='$^'; dnl
+mk_ifnempty='ifneq ($('; dnl
+mk_ifempty='ifeq ($('; dnl
+mk_efi='),)'; dnl
+mk_ifexists='ifneq ($(strip $(shell ls '; dnl
+mk_xfi=')),)'; dnl
+mk_else='else'; dnl
+mk_endif='endif'; dnl
+mk_eval='$(shell '; dnl
+mk_eval_end=')'; dnl
+], dnl
+[mk_allsrc='$>'; dnl
+mk_ifnempty='.if ! empty('; dnl
+mk_ifempty='.if empty('; dnl
+mk_efi=')'; dnl
+mk_xfi=')'; dnl
+mk_ifexists='.if exists('; dnl
+mk_else='.else'; dnl
+mk_endif='.endif'; dnl
+mk_eval='`'; dnl
+mk_eval_end='`'; dnl
+])
+
+AC_ARG_WITH(sgetaroot,
+[  --with-sgetaroot=GETAROOT  substitute GETAROOT],
+[sgetaroot=$withval], [sgetaroot=])
+
+AC_ARG_WITH(cxmldir,
+[  --with-cxmldir=DIR   Specify location of CXML],
+[cxmldir=$withval], [cxmldir="/usr/local"])
+
+AC_ARG_WITH(expatdir,
+[  --with-expatdir=DIR   Specify location of eXpat],
+[expatdir=$withval], [expatdir="/usr/local"])
+
+AC_ARG_WITH(icu-config,
+[  --with-icu-config=PATH       set icu-config location search path],
+[icuconfig=$withval], [icuconfig="/usr/local/bin/icu-config"])
+
+AC_ARG_WITH(stmddir,
+[  --with-stmddir=DIR  Specify location of stmd],
+[stmddir=$withval], [stmddir="/usr/local"])
+
+AC_ARG_WITH(stmdhost,
+[  --with-stmdhost=HOST  Specify host-address of stmd],
+[stmdhost=$withval], [stmdhost="localhost"])
+
+AC_ARG_WITH(stmdserv,
+[  --with-stmdserv=SERV  Specify service-name of stmd],
+[stmdserv=$withval], [stmdserv="stmd"])
+
+AC_ARG_WITH(stmdlocalsocket,
+[  --with-stmdlocalsocket=SERV  Specify local-socket-name of stmd],
+[stmdlocalsocket=$withval], [stmdlocalsocket="/tmp/stmd.sock"])
+
+AC_ARG_WITH(rnmasterdb,
+[  --with-rnmasterdb=PATH_TO_MASTER  master databse of rn],
+[rnmasterdb=$withval], [rnmasterdb="/dev/null"])
+
+AC_ARG_WITH(rnmetadburl,
+[  --with-rnmetadburl=URL  meta-db's URF of rn],
+[rnmetadburl=$withval], [rnmetadburl=""])
+
+AC_ARG_WITH(eshkdir,
+[  --with-eshkdir=DIR   Specify location of ESHK headers],
+[eshkdir=$withval], [eshkdir=""])
+
+AC_ARG_WITH(xfssncpu,
+[  --with-xfssncpu=DIR   Specify the number of cpu for xfss execution [default (empty)]],
+[xfssncpu=$withval], [xfssncpu=""])
+
+xfork='no'
+AC_ARG_ENABLE(xfork,
+[  --enable-xfork       use fork [default no]])
+if test "$enable_xfork" = "yes"; then
+	xfork='yes'
+fi
+
+xpthread='no'
+AC_ARG_ENABLE(xpthread,
+[  --enable-xpthread       use pthread [default no]])
+if test "$enable_xpthread" = "yes"; then
+	xpthread='yes'
+fi
+
+AC_ARG_WITH(mkrincpu,
+[  --with-mkrincpu=num   use num cpus for mkri],
+[mkrincpu=$withval], [mkrincpu="1"])
+
+#AC_ARG_ENABLE(keepwd,
+#[  --enable-keepwd        do not remove workdir],
+#[keepwd='yes'], [keepwd='no'])
+
+ren='no'
+AC_ARG_ENABLE(ren,
+[  --enable-ren        enable REN [default no]])
+if test "$enable_ren" = "yes"; then
+	ren='yes'
+fi
+
+proxy='no'
+AC_ARG_ENABLE(proxy,
+[  --enable-proxy        enable gss3 proxy [default no]])
+if test "$enable_proxy" = "yes"; then
+	proxy='yes'
+fi
+
+geta='no'
+AC_ARG_ENABLE(geta,
+[  --enable-geta        use GETA3.2u [default no]])
+if test "$enable_geta" = "yes"; then
+	geta='yes'
+fi
+
+allowerror='no'
+AC_ARG_ENABLE(allowerror,
+[  --enable-allowerror        allow error [default no]])
+if test "$enable_allowerror" = "yes"; then
+	allowerror='yes'
+fi
+
+mdbg='no'
+AC_ARG_ENABLE(mdbg,
+[  --enable-mdbg        enable mdbg [default no]])
+if test "$enable_mdbg" = "yes"; then
+	mdbg='yes'
+fi
+
+db='no'
+AC_ARG_ENABLE(db,
+[  --enable-db        enable db [default no]])
+if test "$enable_db" = "yes"; then
+	db='yes'
+fi
+
+shared='yes'
+AC_ARG_ENABLE(shared,
+[  --enable-shared        enable shared [default yes]])
+if test "$enable_shared" != "yes"; then
+	shared='yes'
+fi
+
+dlsim='no'
+AC_ARG_ENABLE(dlsim,
+[  --enable-dlsim        enable dlsim [default no]])
+if test "$enable_dlsim" = "yes"; then
+	dlsim='yes'
+fi
+
+darwindlsim='no'
+AC_ARG_ENABLE(darwindlsim,
+[  --enable-darwindlsim        enable dlsim for darwin [default no]])
+if test "$enable_darwindlsim" = "yes"; then
+	darwindlsim='yes'
+fi
+
+lp64='no'
+AC_ARG_ENABLE(lp64,
+[  --enable-lp64        enable lp64 [default no]])
+if test "$enable_lp64" = "yes"; then
+	lp64='yes'
+fi
+
+tf64='no'
+AC_ARG_ENABLE(tf64,
+[  --enable-tf64        enable tf64 [default no]])
+if test "$enable_tf64" = "yes"; then
+	tf64='yes'
+fi
+
+utf32fss='no'
+AC_ARG_ENABLE(utf32fss,
+[  --enable-utf32fss        enable ucs4fss [default no]])
+if test "$enable_utf32fss" = "yes"; then
+	utf32fss='yes'
+fi
+
+rigidstrcmp='no'
+AC_ARG_ENABLE(rigidstrcmp,
+[  --enable-rigidstrcmp        enable rigidstrcmp [default no]])
+if test "$enable_rigidstrcmp" = "yes"; then
+	rigidstrcmp='yes'
+fi
+
+indexp='no'
+AC_ARG_ENABLE(indexp,
+[  --enable-indexp        enable indexp [default no]])
+if test "$enable_indexp" = "yes"; then
+	indexp='yes'
+fi
+
+newlayout='no'
+AC_ARG_ENABLE(newlayout,
+[  --enable-newlayout        enable new binary layout for pkgsrc [default no]])
+if test "$enable_newlayout" = "yes"; then
+	newlayout='yes'
+fi
+
+uniquify='no'
+AC_ARG_ENABLE(uniquify,
+[  --enable-uniquify        enable article grouping [default no]])
+if test "$enable_uniquify" = "yes"; then
+	uniquify='yes'
+fi
+
+if test "$xfork" = "no"; then
+	xfork=""
+fi
+
+if test "$xpthread" = "no"; then
+	xpthread=""
+fi
+
+if test "$ren" = "no"; then
+	ren=""
+fi
+
+if test "$proxy" = "no"; then
+	proxy=""
+fi
+
+if test "$geta" = "no"; then
+	geta=""
+fi
+
+if test "$allowerror" = "no"; then
+	allowerror=""
+fi
+
+if test "$mdbg" = "no"; then
+	mdbg=""
+fi
+
+if test "$db" = "no"; then
+	db=""
+fi
+
+if test "$shared" = "no"; then
+	shared=""
+fi
+
+if test "$dlsim" = "no"; then
+	dlsim=""
+fi
+
+if test "$darwindlsim" = "no"; then
+	darwindlsim=""
+fi
+
+if test "$lp64" = "no"; then
+	lp64=""
+fi
+
+if test "$tf64" = "no"; then
+	tf64=""
+fi
+
+if test "$utf32fss" = "no"; then
+	utf32fss=""
+fi
+
+if test "$rigidstrcmp" = "no"; then
+	rigidstrcmp=""
+fi
+
+if test "$indexp" = "no"; then
+	indexp=""
+fi
+
+if test "$newlayout" = "no"; then
+	newlayout=""
+fi
+
+if test "$uniquify" = "no"; then
+	uniquify=""
+fi
+
+AC_SUBST(ALLSRC)dnl
+ALLSRC=$mk_allsrc
+AC_SUBST(IFNEMPTY)dnl
+IFNEMPTY=$mk_ifnempty
+AC_SUBST(IFEMPTY)dnl
+IFEMPTY=$mk_ifempty
+AC_SUBST(EFI)dnl
+EFI=$mk_efi
+AC_SUBST(IFEXISTS)dnl
+IFEXISTS=$mk_ifexists
+AC_SUBST(XFI)dnl
+XFI=$mk_xfi
+AC_SUBST(ELSE)dnl
+ELSE=$mk_else
+AC_SUBST(ENDIF)dnl
+ENDIF=$mk_endif
+AC_SUBST(EVAL_BEGIN)dnl
+EVAL_BEGIN=$mk_eval
+AC_SUBST(EVAL_END)dnl
+EVAL_END=$mk_eval_end
+
+AC_SUBST(SGETAROOT)
+SGETAROOT=$sgetaroot
+
+AC_SUBST(CXMLDIR)dnl
+CXMLDIR=$cxmldir
+
+AC_SUBST(EXPATDIR)dnl
+EXPATDIR=$expatdir
+
+AC_SUBST(ICUCONFIG)dnl
+ICUCONFIG=$icuconfig
+
+if test ! -x "$icuconfig"; then
+	echo "Error: $icuconfig not found" 1>&2
+	exit 1
+fi
+
+ansi_source=
+if $icuconfig --cflags | grep ansi; then
+	ansi_source=yes
+fi
+
+if test "${YACC}" = ""; then
+	echo "Error: yacc or bison not found" 1>&2
+	exit 1
+fi
+
+AC_SUBST(XFORK)
+XFORK=$xfork
+
+AC_SUBST(XPTHREAD)
+XPTHREAD=$xpthread
+
+AC_SUBST(MKRI_NCPU)
+MKRI_NCPU=$mkrincpu
+
+#AC_SUBST(KEEP_WORKDIR)
+#KEEP_WORKDIR=$keepwd
+
+AC_SUBST(ENABLE_REN)
+ENABLE_REN=$ren
+
+AC_SUBST(ENABLE_PROXY)
+ENABLE_PROXY=$proxy
+
+AC_SUBST(ENABLE_GETA)
+ENABLE_GETA=$geta
+
+AC_SUBST(ENABLE_ALLOWERROR)
+ENABLE_ALLOWERROR=$allowerror
+
+AC_SUBST(ENABLE_MDBG)
+ENABLE_MDBG=$mdbg
+
+AC_SUBST(ENABLE_DB)
+ENABLE_DB=$db
+
+AC_SUBST(ENABLE_SHARED)
+ENABLE_SHARED=$shared
+
+AC_SUBST(ENABLE_DLSIM)
+ENABLE_DLSIM=$dlsim
+
+AC_SUBST(ENABLE_DARWIN_DLSIM)
+ENABLE_DARWIN_DLSIM=$darwindlsim
+
+AC_SUBST(ENABLE_LP64)
+ENABLE_LP64=$lp64
+
+AC_SUBST(ENABLE_TF64)
+ENABLE_TF64=$tf64
+
+AC_SUBST(ENABLE_UTF32FSS)
+ENABLE_UTF32FSS=$utf32fss
+
+AC_SUBST(ENABLE_RIGIDSTRCMP)
+ENABLE_RIGIDSTRCMP=$rigidstrcmp
+
+AC_SUBST(ENABLE_INDEXP)
+ENABLE_INDEXP=$indexp
+
+AC_SUBST(ENABLE_NEWLAYOUT)
+ENABLE_NEWLAYOUT=$newlayout
+
+AC_SUBST(ENABLE_UNIQUIFY)
+ENABLE_UNIQUIFY=$uniquify
+
+AC_SUBST(ANSI_SOURCE)
+ANSI_SOURCE=$ansi_source
+
+AC_SUBST(STMDDIR)dnl
+STMDDIR=$stmddir
+
+AC_SUBST(STMDHOST)dnl
+STMDHOST=$stmdhost
+
+AC_SUBST(STMDSERV)dnl
+STMDSERV=$stmdserv
+
+AC_SUBST(STMDLOCALSOCKET)dnl
+STMDLOCALSOCKET=$stmdlocalsocket
+
+AC_SUBST(RN_MASTER_DB)dnl
+RN_MASTER_DB=$rnmasterdb
+
+AC_SUBST(RN_METADB_URL)dnl
+RN_METADB_URL=$rnmetadburl
+
+AC_SUBST(ESHKDIR)dnl
+ESHKDIR=$eshkdir
+
+AC_SUBST(XFSSNCPU)dnl
+XFSSNCPU=$xfssncpu
+
+AC_OUTPUT(Makefile
+	rules.mk
+	config.mk
+	nwam.h
+	ssetup
+	docs/INSTALL)

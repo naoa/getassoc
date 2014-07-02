@@ -1,0 +1,310 @@
+*** INDEX
+1. ITB format
+2. Tar archived index (ITB format is more preferable)
+3. XML based format (ITBX)
+
+
+*** 1. ITB format
+
+DESCRIPTION:
+
+ITB-file is a UCS/UTF-8 encoded intermediate file of a corpus. 
+It consists of IDs, texts, titles, links, and other properties of each document.
+Each line must be terminated by a LF (012).
+** NEW ** (or CRLF (015 012))
+
+FORMAT:
+
+@-line: (a line starts with an `@', prolog of ITB.)
+	(Conveys same information of inf-file.)
+	These lines should appear before the any i-line.
+	This line is split up into two part. the first part is of
+	between @ and =, and the second part is the rest of line,
+	i.e. up to the newline.
+	///The fist part should be a valid XML name,
+	The fist part should be a valid subset of XML name (see below),
+	and the latter may be any string.
+	The name and latter string is inserted into the corpus line of
+	the catalogue file.
+	@title= should be supplied by the user.
+	@row-servers=, @col-servers=,
+	@name=, @properties=, @created=, @number-of-articles=,
+	@stemmer=, and @stat.*= are reserved by the system.
+
+i-line: (a line starts with an `i')
+	Indicates the start of each document.
+	Rest of this line becomes an identifier of this document, and
+	following lines up to next i-line belongs to this document.
+
+;;; DO NOT USE t-line. this function will be deprecated in the next version.
+;;; t-line -- Rest of this line is a title of this document.
+
+space-line: (a line starts with a ` ')
+	Rest of this line should be a word (or phrase *) to be indexed.
+	Usually stemmed words.
+	The word should be normalized to NFKC.
+	(*Note that spaces (except for the first one) are also treated
+	as a part of the word. i.e. what is written here is treated AS IS.)
+
+[1-9]-line: (a line starts with a digit)
+	The leading part separeted by a ' ' should be a well formed number.
+	(leading zero is not allowed!)
+	The rest of this line is treated as a word, which appears
+	`number' times in this document.
+
+b1-line: (a line starts with a string `b1')
+	Rest of this line should be a text to be indexed.
+	itb2frq automatically splits the text into words, in an arcane way.
+	b1-line may apperar more than once in a document.
+	They are procecced by morphological analyzer, in order.
+
+#-line: (a line starts with a `#')
+	property or auxiliary entry.
+	this line format is like this:
+		#<name>=<value>
+	Here, <name> is a name of property to be defined, and
+	<value> is the value of the property.
+	Note that no space is allowed between each field.
+	<name> must be subset of XML name.
+#-lines may appear more than twice in a document.
+#-lines are concatenated in the appearing order, without newline.
+Add extra spaces at the end of the line
+to avoid the first word of the next line is concatenated to
+the last word of the line.
+(User may add any property to the index in the same manner of title
+or link-file. Note that `id', `score', `TFd', `name', `vec', and
+`body' are reserved by the system as well as `title', `link'.)
+
+A line that start with `#body=' is expanded into tow lines:
+the b1-line and the !-line.
+
+!-line: (a line starts with a `!')
+	full text search segment.
+	the content of this line is subject to full text search.
+	each !-line is assigned a segment number in order, starting from 0.
+	itb2frq generates a special data for full text search.
+	RESTRICTION: '\0' and '\n' cannot be included.
+	The content of this line is normalized to NFKC.
++-line: (a line starts with a '+')
+	same as !-line, except for no nomalization is applied.
+
+$-line: (a line starts with a `$')
+	pass options to GETAssoc installer.
+	see OPTIONS.TXT for more detail.
+
+(for a programmer:
+	If <value> is empty, (i.e. a newline follows just after `=')
+	this line will be just ignored.
+	There are no way to generate empty line into the target file.
+	GETA treats missing property as an empty one, so no trouble
+	should be introduced by this ad-hock rule.
+)
+
+subset of XML name:
+	name ::= (LetterSubset | '_' | ':') (NameCharSubset)*
+	LetterSubset ::= [#x0041-#x005A] | [#x0061-#x007a]
+	NameCharSubset ::= LetterSubset | DigitSubset | '.' | '_' | '-' | ':'
+	DigitSubset ::= [#x0030-#x0039]
+
+EXAMPLE:
+----- apod.itb:
+@title=APOD [1995.01]
+iap000101.html
+#title=The Millennium that Defines Universe
+#link=http://antwrp.gsfc.nasa.gov/apod/ap000101.html
+ welcome
+ to
+ the
+ millennial
+!Welcome to the millennial ...
+iap000102.html
+#title=The Largest Rock Known
+#link=http://antwrp.gsfc.nasa.gov/apod/ap000102.html
+ there
+ that
+ faint
+ dot
+!The ...
+iap000103.html
+#title=Cas A Supernova Remnant in X-Rays
+#link=http://antwrp.gsfc.nasa.gov/apod/ap000103.html
+ the
+ complex
+ shell
+ of
+!The complex shell of ...
+
+
+*** 2. Tar archived index (ITB index is more preferable)
+
+DESCRIPTION:
+Before GETA processes the index, ITB file is serialized.
+Each file name has a proper extension part, indicating which part
+is stored in that file.
+A tar archived index is a streaming archive of these files.
+The files in the archive should have a relative pathname,
+while any sub-directory-part may allowed.
+
+FORMAT:
+inf-file contains meta-information of a corpus.
+An entry @title= is mandatory.
+Entries @name=, @properties=, @created=, @number-of-articles=, and @stemmer=
+are reserved.
+
+Every entries in this file will appear in the catalog. (c.f. PROTOCOL.TXT)
+This filename should end with `.@inf'
+(the string between `@' and `=' should be a valid XML name)
+
+frq-file consists of tokenized articles.
+Each article starts with a line which begins with a `#',
+and the rest of the line is an article identifier.
+Tokenized words follows it, a word for a line, with a leading space(` ').
+NOTE: Very frequent words, which conveys less information,
+such as `a', `the', `of', and so on, should removed from this file.
+This filename should end with `.#@frq'.
+
+title-file consists of article titles.
+Each article starts with a line which begins with a `%',
+and the rest of the line is an article identifier.
+The title of the articles follows the line, with a leading space(` ').
+This filename should end with `.#title'.
+
+link-file consists of article (URL-encoded) URLs.
+Each article starts with a line which begins with a `%',
+and the rest of the line is an article identifier.
+The URL of the articles follows the line, with a leading space(` '),
+and should be properly URL-encoded.
+This filename should end with `.#link'.
+
+(User may add any property to the index in the same manner of title
+or link-file. Note that `id', `score', `TFd', `name', `vec', and
+`nfss.rmap' are reserved by the system as well as `title', `link'.)
+(the string should be a valid XML name)
+
+*** Full text search index cannot be generated by user.
+*** If you need a full text search index, use itb-format.
+
+EXAMPLE:
+
+----- apod.@inf:
+@title=APOD [1995.01]
+
+
+----- apod.#@frq:
+#ap000101.html
+ welcome
+ to
+ the
+ millennial
+#ap000102.html
+ there
+ that
+ faint
+ dot
+#ap000103.html
+ the
+ complex
+ shell
+ of
+
+
+----- apod.#title:
+%ap000101.html
+ The Millennium that Defines Universe
+%ap000102.html
+ The Largest Rock Known
+%ap000103.html
+ Cas A Supernova Remnant in X-Rays
+
+
+----- apod.#link:
+%ap000101.html
+ http://antwrp.gsfc.nasa.gov/apod/ap000101.html
+%ap000102.html
+ http://antwrp.gsfc.nasa.gov/apod/ap000102.html
+%ap000103.html
+ http://antwrp.gsfc.nasa.gov/apod/ap000103.html
+
+--
+
+
+*** 3. XML based format (ITBX)
+
+3.1 overview
+XML based format is an another representation of an ITB formatted database.
+These format correspond 1 to 1, each other.
+
+3.2 Namespaces and toplevel structure
+
+The following namespaces are assumed in this description. 
+	xmlns:itb="http://itb.cs.nii.ac.jp/"
+	xmlns:otmi="http://www.nature.com/schema/2006/03/otmi"
+	xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+
+XML based format file consists multiple elements.
+Only `meta' and `entry' may appear at the toplevel, 
+and all `meta' should appear before any `entry'.
+(There are one eception. In this case, whole thing is encapsulated
+ with an `envelope' tag.)
+The file may be prefixed by a (utf-8 encoded) BOM.
+The file may NOT prefixed by any XML declaration (due to a a technical problem.)
+
+3.3 Elements
+
+The whole elements may be encapselated with an `envelope' tag:
+<itb:envelope xmlns:itb="http://itb.cs.nii.ac.jp/">
+	[<meta>]...
+	[<entry>]...
+</itb:envelope>
+
+@-line:
+<itb:meta type="name">value</itb:meta>
+
+each article must be enclused with entry tag:
+<atom:entry>
+
+i-line:
+<atom:id>identifier</atom:id>
+
+#title=: (special case of #-line)
+<atom:title>title-of-this-article</atom:title>
+
+#link=: (special case of #-line)
+<atom:link>url-of-this-article</atom:link>
+
+other data must be enclosed with data tag:
+<otmi:data>
+
+b1-lines must be enclosed with snippets tag:
+<otmi:snippets>
+
+b1-line:
+<otmi:snippet>text(any newline character in this text is erased)</otmi:snippet>
+
+[1-9]-lines and space-lines must be enclused with vectors tag:
+<otmi:vectors>
+
+[1-9]-line:
+<otmi:vector count="#">word</otmi:vector>
+
+space-line:
+<otmi:vector>word</otmi:vector>
+
+#-line:
+<itb:attr type="name">value<itb:attr>
+
+!-line:
+<itb:fss>value<itb:fss>
+
+$-line:
+<itb:opt type="name">value</itb:opt>
+
+Any elements not described here are silently ignored.
+See sample.xml in this directory.
+
+If snippets and vectors appears in an article,
+both of them are used to index the article.
+
+--
+$Id: ITB-FORMAT.TXT,v 1.38 2009/08/08 11:20:50 nis Exp $

@@ -1,0 +1,29 @@
+Typical directory hierachy
+
+~getassoc + .ssh		// getassoc's root
+          + g +			// GETAROOT && getassoc's virtual root
+              * bin		// geta binaries
+              * dwam		// installed databases
+              + etc		// metadata
+              * frqs		// sample data
+              + include +
+                        + geta	// geta header files
+              * lib		// geta librarires
+              + nwam		// installed databases
+              * net		// installed databeses (distributed version)
+              + pwam		// installed databases (distributed version)
+              * sbin		// geta administration utililties
+              + share +
+                      + getassoc // files used by cgi-bin
+              + tmp		// work area
+              + wbin		// getassoc binaries
+
+
+~getassoc, `.ssh', `dwam', `etc', and `tmp' should owned by getassoc.
+`.ssh' and it's decendants should not be readable other than getassoc.
+`dwam', `etc', and `tmp' should be writable.
+`bin', `frqs', `include', `lib', `sbin', and `wbin' may be shared by other servers.
+Useally `net' is not used.
+To make and utilize distributed indice, `stp.c' must be modified directly.
+
+`dwam', `lib', and `wbin' should be readable and executable by httpd (or webservd).

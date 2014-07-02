@@ -1,0 +1,24 @@
+★技術資料
+
+stp
+	rm
+	mv
+
+	tsv2itb
+	otmi2itb
+
+	gzip
+	bzip2
+	uncompress
+
+	#if GETA32u
+		pax
+		itb2frq
+		mkdw
+		mkpi
+		mkri
+	#endif
+
+	#if GETAssoc
+		xgetassoc
+	#endif

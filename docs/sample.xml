@@ -1,0 +1,70 @@
+﻿<itb:envelope xmlns:itb="http://itb.cs.nii.ac.jp/" xmlns:otmi="http://www.nature.com/schema/2006/03/otmi" xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/" xmlns:atom="http://www.w3.org/2005/Atom">
+<itb:meta type="title">Book Town じんぼう</itb:meta>
+<itb:meta type="tag">jimbou,debug</itb:meta>
+<itb:opt type="cmode">3</itb:opt>
+<itb:opt type="ioptions">ignore-case,ignore-space,collapse-zdz</itb:opt>
+<atom:entry>
+	<atom:id>01510460102006082924151054</atom:id>
+	<atom:title>法律年鑑 昭和１１年版 ／</atom:title>
+	<atom:link><![CDATA[http://124.36.111.187/marunumawebjimbou/jimbou/frmProductDetail.aspx?keycode=46010&mode=1]]></atom:link>
+	<otmi:data>
+		<otmi:snippets>
+			<otmi:snippet>法律年鑑 昭和１１年版 ／</otmi:snippet>
+			<otmi:snippet>末弘厳太郎</otmi:snippet>
+			<otmi:snippet>法律</otmi:snippet>
+			<otmi:snippet>法学一般</otmi:snippet>
+		</otmi:snippets>
+		<otmi:vectors>
+			<otmi:vector count="10">法学一般</otmi:vector>
+			<otmi:vector>法学一般</otmi:vector>
+		</otmi:vectors>
+		<itb:attr type="desc">末弘厳太郎，
+昭和11年刊 </itb:attr>
+	</otmi:data>
+</atom:entry>
+<atom:entry>
+	<atom:id>01510479282006082924151054</atom:id>
+	<atom:title>（英文）アーノルド海上保険 第１４版 全２巻 ／</atom:title>
+	<atom:link>http://124.36.111.187/marunumawebjimbou/jimbou/frmProductDetail.aspx?keycode=47928</atom:link>
+	<otmi:data>
+		<otmi:snippets>
+			<otmi:snippet>（英文）アーノルド海上保険 第１４版 全２巻 ／</otmi:snippet>
+			<otmi:snippet>Ｌ．コーリー</otmi:snippet>
+			<otmi:snippet>法律</otmi:snippet>
+			<otmi:snippet>商法</otmi:snippet>
+		</otmi:snippets>
+		<itb:attr type="desc">Ｌ．コーリー，昭和29年刊 </itb:attr>
+	</otmi:data>
+</atom:entry>
+<atom:entry>
+	<atom:id>01510479312006082924151054</atom:id>
+	<atom:title>（法国）刑法撮要 ／ 復刻叢書法律学篇 ６／函なし</atom:title>
+	<atom:link>http://124.36.111.187/marunumawebjimbou/jimbou/frmProductDetail.aspx?keycode=47931</atom:link>
+	<otmi:data>
+		<otmi:snippets>
+			<otmi:snippet>（法国）刑法撮要 ／ 復刻叢書法律学篇 ６／函なし</otmi:snippet>
+			<otmi:snippet>ボアソナード</otmi:snippet>
+			<otmi:snippet>法律</otmi:snippet>
+			<otmi:snippet>刑法</otmi:snippet>
+		</otmi:snippets>
+		<itb:attr type="desc">ボアソナード，平成3年刊 </itb:attr>
+	</otmi:data>
+</atom:entry>
+<atom:entry>
+	<atom:id>01510479392006082924151054</atom:id>
+	<atom:title>「韓国」の治安立法と裁判・検察制度 ／</atom:title>
+	<atom:link>http://124.36.111.187/marunumawebjimbou/jimbou/frmProductDetail.aspx?keycode=47939</atom:link>
+	<otmi:data>
+		<otmi:snippets>
+			<otmi:snippet>「韓国」の治安立法と裁判・検察制度 ／</otmi:snippet>
+			<otmi:snippet>金　圭昇</otmi:snippet>
+			<otmi:snippet>法律</otmi:snippet>
+		</otmi:snippets>
+		<itb:attr type="desc">金　圭昇，昭和61年刊 </itb:attr>
+		<itb:attr type="xxx">yyy</itb:attr>
+		<itb:fss>yyy</itb:fss>
+		<itb:fss>zzz</itb:fss>
+		<itb:fss>mmm</itb:fss>
+	</otmi:data>
+</atom:entry>
+</itb:envelope>

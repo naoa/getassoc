@@ -1,0 +1,43 @@
+GETAssoc try to fork or create_pthread when installing a corpus,
+when configured.
+regardless the configuration, start_reader creates a small process to
+read ITB files.
+start_stmd tries to connect to stmd via socket first.
+If start_stmd fails to connect to stmd, then, it tries to create
+a new stmd process.
+If fork or pthread are enabled, performace of xsort_pcompar/tpsort_pcompar
+will be improved much.
+Refer the following chart to choose appropreate configuration for
+your environment.
+On the unix environment, both fork and pthread are disabled by default.
+
+--enable-xpthread=no  --enable-xfork=no		-- default
+	start_reader: fork
+	start_stmd: socket or fork+execve
+	xsort_pcompar: -
+	tpsort_pcompar: -
+
+--enable-xpthread=yes --enable-xfork=no		-- recommended
+	start_reader: pthread
+	start_stmd: -
+	xsort_pcompar: pthread
+	tpsort_pcompar: pthread
+
+--enable-xpthread=no  --enable-xfork=yes
+	start_reader: fork
+	start_stmd: socket or fork+execve
+	xsort_pcompar: fork
+	tpsort_pcompar: fork
+
+
+--enable-xpthread=yes --enable-xfork=yes	-- avoid
+	start_reader: pthread
+	start_stmd: -
+	xsort_pcompar: fork
+	tpsort_pcompar: fork
+
+xgetassoc.c: #define FRK_GSS3_LOOP:
+	gss3_loop: fork/-
+
+not configurable:
+	stp: fork+execve

@@ -1,0 +1,22 @@
+★技術資料
+
+Re: FORK/THREAD
+
+nwam.c, xgetassoc.c:
+
+ifndef NO_FORK
+	fork
+else
+	pthread_create	<<< will cause stall on UNIX environment.
+			<<< apply this option on WIN32 environemnt only.
+
+
+xsort_pcompar.c, tpsort_pcompar.c:
+
+ifdef X_FORK
+	fork		<<< on certain OS (such as solaris) will result in shortage of memory.
+			<<< x_pthread is pereferable on any case, except for profiling the system.
+elif X_PTHREAD
+	pthread_create
+else
+	serialize

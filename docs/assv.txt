@@ -1,0 +1,127 @@
+★技術資料
+
+assv.c:
+
+assv -- 単語のリスト(== 文書のリストのリスト)を与えて, その中の重要な文書を抽出する
+
+入力:
+struct syminfo * 型で与える ==> q
+
+各 q[t] のメンバは以下の値にセットされていること
+	symbol_t id;		単語 t の ID
+	struct xr_vec v;	単語 t の特徴ベクトル
+	freq_t TF_d;		単語 t の q における頻度を与える
+	double weight;		単語 t の q における重みを与える
+
+NOTE1: smartaa では, 上記に加えて DF を初期化しておく必要がある.
+       weight は 1.0 + log(q->TF_d) にしなければならない.
+NOTE2: smartmtrxQ では, 上記に加えて DF を初期化しておく必要がある.
+       weight は自動で計算される.
+
+id と v は相互に排他的.
+すなわち id をセットし, v を NULL にするか,
+v をセットし, id を 0 にしておかねばならない. << これ重要
+後者は, freetext を単語ベクトルにしたものや, 
+単語・文書の特徴ベクトルなどを渡すこと想定している.
+
+cutoff_df_list はのカットオフ頻度のリスト.
+このリストは q と対になっている. (i.e. q[t] <-> cutoff_df_list[t])
+いま発見された d が q[*] 由来だとする.
+このとき, 全ての * について DF(d) >= cutoff_df_list[*] であれば, d は捨てられる.
+(cutoff_df_list[*] のうち最大のものが用いられるということ).
+値 0 は無限大として扱われる.
+
+------------------------------------------------------------------------
+|q|		問い合わせベクトルの長さ == (\sum_t TF(t|q)^2)^(1/2)
+|d|		ベクトルdの長さ          == (\sum_t TF(t|d)^2)^(1/2)
+|q.tf_idf|	問い合わせベクトルの長さ == (\sum_t TF-idf(t|q)^2)^(1/2)
+|d.tf_idf|	ベクトルdの長さ          == (\sum_t TF-idf(t|d)^2)^(1/2)
+------------------------------------------------------------------------
+
+出力:
+文書のリスト. (struct syminfo *)
+
+*_init では q にも d にも依存しない項を計算する. g には以下の値がセット済み.
+*_init(g)
+	struct g *g;
+	g->w = w;
+qdir	g->qdir = qdir;
+rdir	g->rdir = ~qdir;
+	g->q = q;
+Nq(w)	g->Nq = wam_size(w, qdir);	// 総異なり単語数
+Nr(w)	g->Nr = wam_size(w, rdir);	// 全文書数
+DF(.|q)	g->nq = nq (オリジナル);
+	**** ここ以降, 変数 nq は bool 式で追加された要素数だけ増えた値を保持する.
+	**** g->nq は オリジナルの長さ. 使い分けに注意.
+	g->scookie = scookie;
+
+DF(w)		wam_total_elem_num(g->w)
+TF(w)		wam_total_freq_sum(g->w)
+maxDFq(w)	wam_max_elem_num(g->w, g->qdir)
+maxTFq(w)	wam_max_freq_sum(g->w, g->qdir)
+maxDFr(w)	wam_max_elem_num(g->w, g->rdir)
+maxTFr(w)	wam_max_freq_sum(g->w, g->rdir)
+
+TF(.|q)		g->tfq
+
+*_wq では q_t に依存する項を計算する. (t は引数には与えられない (以下同じ))
+*_wq(qp, g)
+	struct syminfo *qp;	// 問い合わせベクトル q の q_t に対応する要素
+				// (== &g->q[t])
+	struct g *g;
+
+TF(t|q) 	qp->TF_d
+DF(.|t)		qp->DF
+TF(.|t)		qp->TF
+weight(t|q)	qp->weight	// 入力値
+idf(t)		log1p(g->Nr / qp->DF)
+
+
+*_wd では d_t と、q_t に依存する項を計算する. wd(t|d) = ...
+*_wd(dp, qp, g)
+	struct xr_elem const *dp; // d_t. 発見された文書 dp->id => d
+	struct syminfo *qp;	 // q_t. dp を含む q の要素 (== &g->q[t])
+	struct g *g;
+
+		dp->id
+TF(t|d)		dp->freq
+
+
+*_wq と *_wd の積の和が wsum になる.
+
+
+*_norm では d にのみ依存する項を計算する. wsum が 0 だと呼ばれない.
+*_norm(d, dd, g)
+	idx_t d;		// 発見された文書 id
+	struct ovec_t *dd;
+	struct g *g;
+
+wsum は _norm の結果で割られる.
+
+
+*_weight では d にのみ依存する項 weight(d) = ...
+*_weight(wsum, d, dd, h, nh, g)
+	double wsum;		// ここまで計算してきた重み合計を norm で除したもの 
+	idx_t d;		// 発見された文書 id
+	struct ovec_t *dd;
+	struct hvec_t *h;	// t|d のペアリスト (非ゼロ)
+	df_t nh;		// h の要素数 == DF_d (bex: ON のとき, 長くなることに注意)
+				// c.f. TF_d == sum(h[*].dp->freq, nh) where h[*].t->qidx < g->nq
+	struct g *g;
+
+
+(以下のものが *_norm, *_weight で使用可能)
+DF(d&q)		dd->DF_d
+TF(d&q)		dd->TF_d
+DF(.|d)		wam_elem_num(g->w, g->rdir, d)
+TF(.|d)		wam_freq_sum(g->w, g->rdir, d)
+
+
+以下のコードで、全dpとqpのペアを巡回できる。
+	for (i = 0; i < nh; i++) {
+		struct container *t = h[i].t;
+		if (t->qidx < g->nq) {
+			struct xr_elem const *dp = h[i].dp;
+			struct syminfo *qp = &g->q[t->qidx];
+		}
+	}

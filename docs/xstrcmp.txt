@@ -1,0 +1,62 @@
+★技術資料
+
+xstrcmp.c/xstrcmp.h の説明
+
+ option は, u_int の bitmask になっている. 
+ 応用プログラムはそうなっていることをアテにして良い.
+ 
+ (おそらく, GETA が実質的に使いものになるアーキテクチャにおいては)
+ 少なくとも 32 種類まで使用可.
+
+-- Options
+
+// POPTIONS_MASKは, index作成(mkri)時には必ずOFFにしておく
+// ただし, mkriはこれらをONにしてheaderに記録する
+// 検索時は必要に応じてON/OFFすれば良い
+パターンがセグメント先頭にマッチ	-		MATCH_HEAD
+パターンがセグメント末尾にマッチ	-		MATCH_TAIL
+"\<" と "\>" を有効にする		-	(未実装)	WORD_BOUNDARY
+	// MATCH_HEAD, WORD_BOUNDARY は, 
+	// -1 要素に '\0' が入るっている特殊な文字列にしか
+	// 適用できない.
+
+// 検索時に使用する場合に, index作成時にONにしておくもの
+// これらのオプションは, index作成時にOFFだと検索時には使えない
+// ただし, index作成時にONのものが多ければ多いほど性能が落ちる
+大文字/小文字			を区別しない		IGNORE_CASE
+
+ひらがな/カタカナ		を区別しない		COLLAPSE_HIRAKATA
+拗音、促音			を区別しない		COLLAPSE_QY
+箇个ヶヵ			を区別しない		COLLAPSE_KA
+
+マイナス/長音/ダッシュ		を区別しない		COLLAPSE_DASH
+繰り返し記号ゝゞヽヾ々		を区別しない	(未実装)	COLLAPSE_NOMA
+
+3003 DITTO MARK
+3031 VERTICAL KANA REPEAT MARK
+3032 VERTICAL KANA REPEAT WITH VOICED SOUND MARK
+303B VERTICAL IDEOGRAPHIC ITERATION MARK
+
+漢字表記の揺れ(異体字)		を区別しない	(難しい)	COLLAPSE_KANJI_VARIANT
+かなの新字体/旧字体		を区別しない	(難しい)	COLLAPSE_KANA_VARIANT
+
+長音ー、母音でのばす音		を区別しない	(難しい)	COLLAPSE_PS_MARK
+(オ|コ|ゴ|ソ|ゾ|ト|ド|ノ|ホ|ボ|ボ|モ|ロ|ヲ)ア/ワ
+				を区別しない	(難しい)
+
+以下はすべてカタカナでのみ有効
+	// COLLAPSE_ZENHANをONにすると半角カタカナにも有効
+	// COLLAPSE_HIRAKATAをONにするとひらがなにも有効
+	// COLLAPSE_QYが指定されているときは, COLLAPSE_HFは無効
+ヂ/ジ、ヅ/ズ			を区別しない		COLLAPSE_ZDZ
+バ/ヴァ ビ/ヴィ	ベ/ヴェ ボ/ヴォ	を区別しない		COLLAPSE_BV
+# ハ/ファ			を区別しない
+ツィ/ティ/チ、ディ/ジ		を区別しない		COLLAPSE_TTS
+セ/シェ、ゼ/ジェ		を区別しない		COLLAPSE_SSH
+(イ|キ|ギ|シ|ジ|チ|ヂ|ニ|ヒ|ビ|ピ|ミ|リ|ヰ)ア/ヤ
+				を区別しない		COLLAPSE_AY
+キ/ク(サ|シ|ス|セ|ソ)		を区別しない		COLLAPSE_KX
+ヒュ/フュ、ビュ/ヴュ		を区別しない		COLLAPSE_HF
+
+区切り記号			を無視する		IGNORE_PUNCT
+空白				を無視する	(P)	IGNORE_SPACE

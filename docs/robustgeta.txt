@@ -1,0 +1,67 @@
+障碍のタイプ
+
+type1 Hardware or OS が死んでいる (#)
+	-- tcp-connect で timeout するので遅い
+
+type2 OS は生きているが, dwdは死んでいる (#)
+	-- tcp-connect で瞬時に refuse (RST) される
+
+type3 handshake に成功するにもかかわらず検索で失敗する場合 (検索エラー)
+	(OS, HW のクラッシュを含む)
+
+type4 type1 以外のタイミングでサーバがクラッシュし, 無反応状態に陥る
+	-- 対処困難?
+
+type5 集約ノードのクラッシュ -- application 側で対処する
+
+type6 unusable flag がつけられたノード (#)
+
+type7 ビザンチン障碍 -- 対処法なし
+
+(*): type1 の場合, handshake に失敗したソケットを用いないようにフラグをつけ
+	一定時間, type6(unuseable)を引き起こす
+	--> type1 は検出に時間がかかるため
+
+		--> このフラグは sche ファイルの隣りに置いておく
+		    編集時にはロックしなければならない.
+		    編集は, type1 障碍の発生時と, このフラグをクリアする時のみ
+
+(**): type2 のバリエーションとして, dwdは生きているが, 
+	listen queue が溢れていて refuse される場合がある -> too many clients
+	これも, type2 として扱う
+
+(#): connect-to-server で発生する
+
+---
+
+いずれの場合にも handshake 失敗のフラグをつけてソケットを返す
+	(ソケットのハンドルは -1 になることもあり得る)
+死んでいるノードをはずして検索続行
+	(configurationにより検索失敗を選択可)
+
+---
+
+dwc でエラーフラグを返す
+(集約ノードでのエラーと区別できるように)
+集約ノードで各サーバのエラーコードを表示
+	type1, type2 --- タイプとエラーを起こしたサーバ番号
+	type3 ---------- エラーコードとエラーを起こしたサーバ番号
+
+---
+
+type1の高速検出
+	setsockopt でできる?
+	alarm(3) を使う?
+		-> restart-system call ができないOSでは実装が面倒
+			prerequisite: interrupted system call が restart できること
+
+---
+
+セキュリティ: handshake のときにキーを交換するようにする
+
+	DOS	   -- 一定時間以内 handshake を行わない connection を排除
+	DOS	   -- listen で client の IP を制限
+	なりすまし -- キーの一致しないクライアントを排除
+		      起動時のコマンドライン引き数(or ファイル)で指定
+--
+$Id: robustgeta.txt,v 1.1 2010/01/28 22:28:51 nis Exp $

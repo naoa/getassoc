@@ -1,0 +1,301 @@
+コメント
+	-- から行末まで
+	/* から */ まで
+
+構文 
+
+definition	:	IDENTIFIER '::=' expression '.' 
+		|	IDENTIFIER '::=' assignment_expr_list ',' expression '.' 
+		;
+
+expression	:	additive_expr 
+		|	additive_expr '\sum_t' additive_expr_s 
+		|	'\sum_t' additive_expr_s 
+		;
+
+assignment_expr_list :	assignment_expr 
+		|	assignment_expr_list ',' assignment_expr 
+		;
+
+assignment_expr :	IDENTIFIER '=' additive_expr 
+		;
+
+additive_expr	:	multiplicative_expr
+		|	additive_expr '+' multiplicative_expr 
+		|	additive_expr '-' multiplicative_expr 
+		;
+
+multiplicative_expr	:	unary_expr
+		|	unary_expr '*' multiplicative_expr 
+		|	unary_expr '/' multiplicative_expr 
+		;
+
+unary_expr	:	postfix_expr
+		|	'-' unary_expr 
+		;
+
+postfix_expr	:	primary_expr
+		|	function_identifier '(' argument_list ')' 
+		;
+
+argument_list	:	additive_expr
+		|	argument_list ',' additive_expr 
+		;
+
+primary_expr	:	terminal_symbol 
+		|	NUMBER 
+		|	IDENTIFIER 
+		|	'(' additive_expr ')' 
+		|	'{' additive_expr '}' 
+		|	'[' additive_expr ']' 
+		;
+
+
+additive_expr_s	:	multiplicative_expr_s
+		|	additive_expr_s '+' multiplicative_expr_s 
+		|	additive_expr_s '-' multiplicative_expr_s 
+		;
+
+multiplicative_expr_s	:	unary_expr_s
+		|	unary_expr_s '*' multiplicative_expr_s 
+		|	unary_expr_s '/' multiplicative_expr_s 
+		;
+
+unary_expr_s	:	postfix_expr_s
+		|	'-' unary_expr_s 
+		;
+
+postfix_expr_s	:	primary_expr_s
+		|	function_identifier '(' argument_list_s ')' 
+		;
+
+argument_list_s	:	additive_expr_s
+		|	argument_list_s ',' additive_expr_s 
+		;
+
+primary_expr_s	:	terminal_symbol 
+		|	terminal_symbol_s 
+		|	NUMBER 
+		|	IDENTIFIER 
+		|	'(' additive_expr_s ')' 
+		|	'{' additive_expr_s '}' 
+		|	'[' additive_expr_s ']' 
+		;
+
+terminal_symbol	:	'Nq(w)'
+		|	'Nr(w)'
+		|	'DF(w)'
+		|	'TF(w)'
+		|	'maxDFq(w)'
+		|	'maxTFq(w)'
+		|	'maxDFr(w)'
+		|	'maxTFr(w)'
+		|	'DF(.|q)'
+		|	'TF(.|q)'
+		|	'DF(.|d)'
+		|	'TF(.|d)'
+		|	'DF(d&q)'
+		|	'TF(d&q)'
+		;
+
+terminal_symbol_s :	'TF(t|q)'
+		|	'DF(.|t)'
+		|	'TF(.|t)'
+		|	'idf(t)'
+		|	'TF(t|d)'
+		|	'weight(t|q)'
+		;
+ 
+function_identifier :	'acos' | 'acosh' | 'asin' | 'asinh' | 'atan' | 'atanh' | 'atan2'
+		|	'cabs' | 'cbrt' | 'ceil' | 'copysign' | 'cos' | 'cosh'
+		|	'erf' | 'erfc' | 'exp' | 'expm1' | 'hypot' 
+		|	'fabs' | 'finite' | 'floor' | 'fmod'
+		|	'ilogb' | 'isinf' | 'isnan' | 'j0' | 'j1' | 'jn'
+		|	'lgamma' | 'log' | 'log10' | 'log1p'
+		|	'nan' | 'nextafter' | 'pow' | 'remainder' | 'rint'
+		|	'scalbn' | 'sin' | 'sinh' | 'sqrt'
+		|	'tan' | 'tanh' | 'trunc' | 'y0' | 'y1' | 'yn'
+		;
+
+IDENTIFIER = [a-zA-Z_][a-zA-z0-9_]*
+
+NUMBER = [0-9][0-9]*(\.[0-9]*)?(e[+-][0-9][0-9]*)?
+        | \.[0-9][0-9]*(e[+-][0-9][0-9]*)?
+
+TERMINAL_SYMBOL =
+	  Nq(w)
+	| Nr(w)
+	| DF(w)
+	| TF(w)
+	| maxDFq(w)
+	| maxTFq(w)
+	| maxDFr(w)
+	| maxTFr(w)
+	| DF(.|q)
+	| TF(.|q)
+	| DF(.|d)
+	| TF(.|d)
+
+S_TERMINAL_SYMBOL =	(\sum_t の後でのみ使用可)
+	  TF(t|q)
+	| DF(.|t)
+	| TF(.|t)
+	| idf(t)
+	| TF(t|d)
+	| weight(t|q)
+
+(ファイルの名前は類似度の名前(NAME)に .f を付けたものにすること.)
+
+記号の意味
+
+q		単語のリスト
+qdir		WAM_COL
+rdir		WAM_ROW
+
+|q|		問い合わせベクトルの長さ == (\sum_t TF(t|q)^2)^(1/2)
+|d|		ベクトルdの長さ          == (\sum_t TF(t|d)^2)^(1/2)
+|q.tf_idf|	問い合わせベクトルの長さ == (\sum_t TF-idf(t|q)^2)^(1/2)
+|d.tf_idf|	ベクトルdの長さ          == (\sum_t TF-idf(t|d)^2)^(1/2)
+
+Nq(w)		全単語数 (異なり)
+Nr(w)		全文書数
+DF(w)		DF 合計
+TF(w)		TF 合計
+maxDFq(w)	文書長さの最大値  == max_d(DF(.|d))
+maxTFq(w)	文書長さの最大値  == max_d(TF(.|d))
+maxDFr(w)	単語 DF の最大値  == max_t(DF(.|t))
+maxTFr(w)	単語 TF の最大値  == max_t(TF(.|t))
+
+DF(.|q)		問い合わせベクトルqの非0要素数(DF), ( == nq)
+TF(.|q) 	問い合わせベクトルqのTF合計
+DF(.|d)		d の(異なり)長さ(非0要素数)	(文書 d の異なり単語数)
+TF(.|d)		d の TF 合計			(文書 d に現れる総単語数)
+
+DF(d&q)		d と問い合わせベクトル q に共通して現れる t の数,
+TF(d&q)		d と問い合わせベクトル q に共通して現れる t の, d における頻度(TF) の合計
+		// \sum_{t\in d&q} TF(t|d)
+		// \sum_{t\in d&q} TF(t|q) ではない...
+		// \sum_{t\in d&q} TF(.|t) でもない...
+
+TF(t|q) 	問い合わせベクトルqに現れる t の q での頻度 (TF)
+TF(t|d)		d 中の t の TF (頻度)
+#使用不可# DF(t|q)	 == 1. (by definition)
+#使用不可# TF-idf(t|q)	 == TF(t|q) * log1p(Nr(w) / DF(.|t))
+DF(.|t)		t の DF, i.e. コーパス中で t がいくつの d に現れたか
+TF(.|t)		t の TF, i.e. コーパス中で t が何回使われたか
+idf(t)		 == log1p(Nr(w) / DF(.|t))
+weight(t|q)	q における t の syminfo 構造型の weight メンバへのアクセス
+
+計算は全て倍精度浮動小数点数.
+
+使用可能な関数
+	acos        inverse trigonometric function
+	acosh       inverse hyperbolic function
+	asin        inverse trigonometric function
+	asinh       inverse hyperbolic function
+	atan        inverse trigonometric function
+	atanh       inverse hyperbolic function
+	atan2       inverse trigonometric function
+	cabs        complex absolute value
+	cbrt        cube root
+	ceil        integer no less than
+	copysign    copy sign bit
+	cos         trigonometric function
+	cosh        hyperbolic function
+	erf         error function
+	erfc        complementary error function
+	exp         exponential
+	expm1       exp(x)-1
+	fabs        absolute value
+	finite      test for finity
+	floor       integer no greater than
+	fmod        remainder
+	hypot       Euclidean distance
+	ilogb       exponent extraction
+	isinf       test for infinity
+	isnan       test for not-a-number
+	j0          Bessel function
+	j1          Bessel function
+	jn          Bessel function
+	lgamma      log gamma function
+	log         natural logarithm
+	log10       logarithm to base 10
+	log1p       log(1+x)
+	nan         return quiet NaN
+	nextafter   next representable number
+	pow         exponential x**y
+	remainder   remainder
+	rint        round to nearest integer
+	scalbn      exponent adjustment
+	sin         trigonometric function
+	sinh        hyperbolic function
+	sqrt        square root
+	tan         trigonometric function
+	tanh        hyperbolic function
+	trunc       nearest integral value
+	y0          Bessel function
+	y1          Bessel function
+	yn          Bessel function
+
+使用可能な定数
+	M_E         e
+	M_LOG2E     log 2e
+	M_LOG10E    log 10e
+	M_LN2       log e2
+	M_LN10      log e10
+	M_PI        pi
+	M_PI_2      pi/2
+	M_PI_4      pi/4
+	M_1_PI      1/pi
+	M_2_PI      2/pi
+	M_2_SQRTPI  2/sqrt(pi)
+	M_SQRT2     sqrt(2)
+	M_SQRT1_2   1/sqrt(2)
+
+
+予約された識別子
+DLSIM_wsum
+DLSIM_d
+DLSIM_h
+DLSIM_nh
+DLSIM_dd
+DLSIM_g
+DLSIM_i
+DLSIM_t
+その他, GETAssoc で定義されているもの
+
+例
+
+smart ::=
+	aveTFq = TF(.|q) / DF(.|q),
+	avelen = DF(w) / Nr(w),
+	slope = .2,
+	norm = (avelen + slope * (DF(.|d) - avelen)) * (1 + log(TF(.|d) / DF(.|d))),
+	1 / norm \sum_t (1 + log(TF(t|q))) / (1 + log(aveTFq)) * idf(t) * (1 + log(TF(t|d))) .
+
+
+smartwa ::=
+	avelen = DF(w) / Nr(w),
+	slope = .2,
+	norm = (avelen + slope * (DF(.|d) - avelen)) * (1 + log(TF(.|d) / DF(.|d))),
+	1 / norm \sum_t (1 + log(TF(t|d))) * weight(t|q) .
+
+
+smartaw ::= log1p(Nr(w) / DF(.|d)) / DF(.|q) \sum_t (1 + log(TF(t|d))) / (1 + log(TF(.|t) / DF(.|t))) .
+
+
+tfidf ::= 1 / TF(.|d) \sum_t TF(t|d) * TF(t|q) * idf(t) .
+
+tf ::= 1 / TF(.|d) \sum_t TF(t|d) * TF(t|q) .
+
+hits ::= DF(d&q) .
+
+Okapi_bm25 ::=
+	k1 = 2,
+	b = .75,
+	avgdl = TF(w) / Nr(w),
+	idf = log((Nr(w) - DF(.|t) + .5) / (DF(.|t) + .5)),
+	return idf * (TF(t|d) * (k1 + 1)) / (TF(t|d) + k1 * (1 - b + b * TF(.|d) / avgdl)) .
+
+制限
+	分散版では使えません

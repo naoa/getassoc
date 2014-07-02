@@ -1,0 +1,6 @@
+smart ::=
+	aveTFq = TF(.|q) / DF(.|q),
+	avelen = DF(w) / Nr(w),
+	slope = .2,
+	norm = (avelen + slope * (DF(.|d) - avelen)) * (1 + log(TF(.|d) / DF(.|d))),
+	1 / norm \sum_t (1 + log(TF(t|q))) / (1 + log(aveTFq)) * idf(t) * (1 + log(TF(t|d))) .

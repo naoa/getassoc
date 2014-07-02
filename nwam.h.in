@@ -1,0 +1,407 @@
+/*	$Id: nwam.h.in,v 1.38 2010/12/15 02:30:15 nis Exp $	*/
+
+/*-
+ * Copyright (c) 2008 Shingo Nishioka.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
+
+#if ! defined _GETA_NWAM_H_
+#define	_GETA_NWAM_H_
+
+#include <inttypes.h>
+
+#if defined ENABLE_GETA
+#include <geta/dtypes.h>
+#include <geta/nlog.h>
+#include <geta/dwut.h>
+#include <geta/timer.h>
+#include <geta/dw.h>
+#include <geta/dci.h>
+#include <geta/dcw.h>
+#include <geta/dxr.h>
+#include <geta/daui.h>
+#include <geta/dwwt.h>
+#include <geta/dwsh.h>
+#include <geta/dwc.h>
+#include <geta/dwsched.h>
+#include <geta/dwam.h>
+#endif	/* ENABLE_GETA */
+
+#if ! defined MAXHOSTNAMELEN
+#define	MAXHOSTNAMELEN	256
+#endif
+
+#define MAXURLLEN	(MAXHOSTNAMELEN + 128)
+
+#if ! defined ENABLE_GETA
+
+#define ENABLE_TF64_yes 1
+#if defined ENABLE_TF64_@ENABLE_TF64@
+#define	ENABLE_TF64	1
+#endif
+#undef ENABLE_TF64_yes
+
+/* Assertion:
+ * sizeof(idx_t) <= MIN(sizeof(freq_t), sizeof(size_t))
+ * sizeof(df_t) == sizeof(idx_t)                singed vs. unsigned
+ * sizeof(freq_t) >< sizeof(size_t)
+ * sizeof(freq_t) <= sizeof(long)		<<< problem w/ LLP64
+ * hashval_t == idx_t				alias
+ * nvmt: size_t
+ */
+
+/* IF32 */
+typedef uint32_t idx_t;
+typedef int32_t df_t;
+#if defined ENABLE_TF64
+typedef int64_t freq_t;
+#else
+typedef int32_t freq_t;
+#endif
+#endif /* ! ENABLE_GETA */
+
+
+#if ! defined ENABLE_GETA
+#define	PRIuIDX_T	PRIu32
+#define	PRIdDF_T	PRId32
+#if defined ENABLE_TF64
+#define	PRIdFREQ_T	PRId64
+#else
+#define	PRIdFREQ_T	PRId32
+#endif
+#else /* ! ENABLE_GETA */
+#define	PRIuIDX_T	PRIu32
+#define	PRIdDF_T	PRId32
+#define	PRIdFREQ_T	PRId32
+#endif /* ! ENABLE_GETA */
+
+#if ! defined ENABLE_GETA
+
+enum dir_t {
+	wam_row = 0,
+	wam_col = 1
+};
+
+#define	WAM_ROW	wam_row
+#define	WAM_COL	wam_col
+#define	WAM_REVERT_DIRECTION(d)	((d) == wam_row ? wam_col : wam_row)
+
+struct xr_elem {
+	idx_t id;
+	freq_t freq;
+};
+
+struct xr_vec {
+	df_t elem_num;
+	freq_t freq_sum;
+	struct xr_elem elems[1];
+};
+
+struct nwam_d;
+typedef struct nwam_d WAM;
+
+#include "simdef.h"
+
+#endif /* ! ENABLE_GETA */
+
+#if ! defined ENABLE_GETA
+struct syminfo {
+#define	SYMINFOPREFIX \
+	idx_t id;	/* INPUT/OUTPUT */ \
+	freq_t TF, TF_d;	/* OUTPUT, INPUT/OUTPUT */ \
+	df_t DF, DF_d;	/* OUTPUT(input @ smartaa), OUTPUT */ \
+	double weight;	/* INPUT/OUTPUT */ \
+	struct xr_vec const *v; /* INPUT */
+
+	SYMINFOPREFIX
+
+	union {		/* user data */
+		struct {
+			char const *pname;
+#if defined ASSV_DBGINFO
+			struct {
+				df_t n;
+				double *w;
+			} qw;
+#endif
+		} d;
+
+		double idf;
+	} u;
+};
+
+struct s_syminfo {
+	SYMINFOPREFIX
+};
+
+#undef SYMINFOPREFIX
+#endif /* ! ENABLE_GETA */
+
+struct syminfole {
+	df_t n;
+	struct syminfo *s;
+};
+
+#if ! defined ENABLE_GETA
+
+struct assv_cookie_mask_t {
+	df_t len;
+	idx_t *m;
+	df_t idx;
+};
+
+struct assv_cookie_masks_t {
+	struct assv_cookie_mask_t p, n;
+};
+#endif /* ! ENABLE_GETA */
+
+struct hvec_t;	/* defined at assvP.h */
+struct assv_g;	/* defined at assvP.h */
+typedef int (*assv_test_t)(idx_t, struct hvec_t *, df_t, struct assv_g *, void *);
+
+struct assv_scookie {
+#define	ASSV_SC_CUTOFF_DF_LIST	1
+#if ! defined ENABLE_GETA
+#define	ASSV_SC_BX	2
+#define	ASSV_SC_MASK	4	/* NOTE: does not work on distributed wam */
+#define	ASSV_SC_FSS	8
+#define	ASSV_SC_UTEST	16	/* NOTE: does not work on distributed wam */
+/*#if defined ENABLE_UNIQUIFY*/
+#define	ASSV_SC_UNIQUIFY 32
+/*#endif*/
+/*#if defined ASSV_DBGINFO*/
+#define	ASSV_SC_DBGINFO	64
+/*#endif*/
+#endif /* ! ENABLE_GETA */
+	int flag;
+	df_t *cutoff_df_list;
+#if ! defined ENABLE_GETA
+	struct {
+		struct bxue_t *b;
+		df_t blen;
+	} bx;
+	struct assv_cookie_masks_t mask;
+	struct fss_query *fssq;
+	struct {
+		assv_test_t test;
+		void *cookie;
+	} utest;
+#endif /* ! ENABLE_GETA */
+};
+
+#if ! defined ENABLE_GETA
+
+#define CS_HBC		1
+#define CS_K_MEANS 	2
+#define CS_TYPE_NAMES { \
+	"", \
+	"CS_HBC", \
+	"CS_K_MEANS", \
+	}
+
+struct cs_elem {
+	struct syminfole csw;	/* word list */
+	struct syminfole csa;	/* article list */
+};
+
+struct bxue_t {
+	int type;
+	idx_t id;	/* if type == '"' */
+};
+
+struct bxu_t;
+
+#endif /* ! ENABLE_GETA */
+
+typedef unsigned int xsc_opt_t;
+typedef unsigned int fss_seg_t;
+
+struct art {
+	idx_t id;
+	unsigned int segid;
+	size_t disp;
+	char const *q;	/* for debug */
+};
+
+struct fss_simple_query {
+	int negativep;		/* 0 -- p, 1 -- n */
+	char const *pattern;
+	xsc_opt_t options;
+	fss_seg_t segments;
+	struct art *arts;	/* OUTPUT (should be initialized to be NULL by user.) */
+	df_t narts;		/* INPUT(xfss only, -1 => unlimited) / OUTPUT */
+	df_t total;		/* OUTPUT(xfss only) */
+};
+
+struct fss_con_query {
+	struct fss_simple_query *q;
+	df_t n;
+};
+
+struct fss_query {
+	struct fss_con_query *query;
+	df_t nq;
+	struct art *pa, *na;	/* OUTPUT: used to free memories... */
+};
+
+#define POPTIONS_MASK (MATCH_HEAD_MASK | MATCH_TAIL_MASK | WORD_BOUNDARY_MASK)
+#define	MAXSEGID	31
+#define	SEGMSK(i) (1 << (i))
+#define	SETSEG(g, i) ((g) |= SEGMSK(i))
+#define ANYSEG() (~0)
+#define	CHKSEG(i, g) (SEGMSK(i) & (g))
+
+#if ! defined ENABLE_GETA
+#define	WAM_SETOPT_ALLOWERROR	1
+#define	WAM_SETOPT_NEED_DISTSTAT	2
+
+#define	WAM_GETOPT_ALLOWERROR	11
+#define WAM_GETOPT_MAY_INCOMPLETE 12
+#define	WAM_GETOPT_DISTSTAT	13
+#define	WAM_GETOPT_DISTSTAT_NN_ROW	14
+#define	WAM_GETOPT_DISTSTAT_NN_COL	15
+#endif /* ! ENABLE_GETA */
+
+#if ! defined entry
+#define	entry
+#endif
+
+#if ! defined ENABLE_GETA
+
+entry int wam_init(char const *);
+
+entry WAM *wam_open(char const *, ...);
+#define NWAM_D	0040000  /* directory */
+#define	NWAM_F	0100000  /* regular */
+entry void nwam_add_tmp(char const *, int);
+entry int wam_close(WAM *);
+entry int wam_rename(char const *, char const *, ...);
+entry int wam_drop(char const *, ...);
+struct wam_update_args;
+entry int wam_update(struct wam_update_args *, ...);
+
+entry WAM *get_registered_handle(WAM *, char const *);
+
+entry df_t wam_get_vec(WAM *, int, idx_t, struct xr_vec const **);
+
+entry idx_t wam_name2id(WAM *, int, char const *);
+entry char const *wam_id2name(WAM *, int, idx_t);
+
+entry char const *wam_handle(WAM *);
+entry df_t wam_size(WAM *, int);
+entry df_t wam_elem_num(WAM *, int, idx_t);
+entry freq_t wam_freq_sum(WAM *, int, idx_t);
+entry df_t wam_max_elem_num(WAM *, int);
+entry freq_t wam_max_freq_sum(WAM *, int);
+entry freq_t wam_total_elem_num(WAM *, ...);
+entry freq_t wam_total_freq_sum(WAM *, ...);
+
+entry int wam_setmask(WAM *, int, idx_t *, df_t, idx_t *, df_t);
+
+entry WAM *wam_prop_open(WAM *, int, char const *);
+entry df_t wam_prop_nentries(WAM *);
+entry WAM *wam_fss_open(WAM *);
+entry ssize_t wam_prop_gets(WAM *, idx_t, char const **);
+
+entry struct syminfo *wsh(struct syminfo const *, df_t, WAM *, int, int, df_t *, df_t *, struct assv_scookie *);
+entry struct syminfo *bex_wsh(struct syminfo const *, df_t, WAM *, int, int, df_t *, df_t *, struct bxue_t *bex, df_t, struct assv_scookie *);
+entry struct syminfo *fss_wsh(struct syminfo const *, df_t, WAM *, int, int, df_t *, df_t *, struct assv_scookie *, struct fss_query *);
+
+entry void wam_dumpall(char const *, char const **, FILE *);
+
+entry void *bdup(void const *, size_t);
+entry struct xr_vec *dxr_dup(struct xr_vec const *);
+
+/*entry struct cs_elem *csb(struct syminfo *, df_t, int, WAM *, int, int, int, df_t, df_t *, df_t, df_t, struct syminfo **);*/
+entry struct cs_elem *ncsb(struct syminfo *, df_t, int, WAM *, int, int, df_t, df_t *, int, df_t);
+
+entry int n_sym_compar(void const *, void const *);
+entry int n_sym_icompar(void const *, void const *);
+
+entry double smartaa(struct syminfo *, df_t, freq_t, struct syminfo *, df_t, freq_t, df_t, freq_t);
+entry double **smartmtrxQ(struct syminfole *, df_t, struct syminfole *, df_t, df_t, freq_t);
+
+entry int find_dlsim(char const *);	/* NOTE: does not work on distributed wam */
+
+entry int wam_setopt(WAM *w, int cmd, ...);
+entry int wam_getopt(WAM *w, int cmd, ...);
+
+entry struct bxu_t *bxu_conv(struct syminfo const *, df_t, struct bxue_t const *, df_t, struct syminfo **, df_t *);
+entry void bxu_free(struct bxu_t *);
+
+#endif	/* ! ENABLE_GETA */
+
+entry struct syminfo *assv(struct syminfo *, df_t, WAM *, int, int, df_t *, df_t *, struct assv_scookie *);
+
+entry double simv(struct syminfo *, df_t, WAM *, int, int, struct syminfo *, df_t);
+
+#define	STEMMER_AUTO	"auto"
+entry struct xr_vec *text2vec(char const *, WAM *, int, char const *);
+entry char *normalize_text(char const *);
+
+#if ! defined ENABLE_GETA
+entry int wam_xfss(WAM *, struct fss_query *, struct fss_simple_query *, struct fss_simple_query *);
+entry int wam_fss_dump(WAM *, FILE *);
+entry ssize_t wam_fss_gets(WAM *, idx_t, unsigned int, char const **);
+#else /* ! ENABLE_GETA */
+struct _fss;
+typedef struct _fss FSS;
+entry FSS *fss_open(char const *, char const *);
+entry int xfss(FSS *, struct fss_query *, struct fss_simple_query *, struct fss_simple_query *);
+entry int fss_close(FSS *);
+entry ssize_t fss_gets(FSS *, idx_t, unsigned int, char const **);
+#endif /* ! ENABLE_GETA */
+
+entry int parse_segs(char const *, fss_seg_t *);
+entry int parse_opts(char const *, xsc_opt_t *);
+entry struct syminfo *arts2syminfo(struct art *, df_t);
+entry idx_t *arts2idvec(struct art *, df_t);
+entry void free_fss_query(struct fss_query *);
+
+#define	xstrcmp(a, b, o)	(xstrncmp((a), (b), -1, (o)))
+entry int xstrncmp(char const *, char const *, size_t, xsc_opt_t);
+
+entry int xgserv_loop(int, char const *, char const *, char **);
+
+entry size_t splitv(char *, int, char *[], size_t, int);
+entry size_t count_char(char const *, int);
+
+struct timer;
+
+entry struct timer *timer_new(void);
+entry void timer_init(struct timer *);
+entry void timer_check_elapsed(struct timer *);
+entry void timer_print_elapsed(struct timer *, char const *, FILE *);
+entry void timer_sprint_elapsed(struct timer *, char const *, char *, size_t);
+
+entry int send_binary_content(void *, ssize_t (*)(void *, const void *, size_t), char const *, size_t, int);
+#if ! defined CRLFTEXT
+#define	send_text_content	send_binary_content
+#else
+entry int send_text_content(void *, ssize_t (*)(void *, const void *, size_t), char const *, size_t, int);
+#endif
+entry int http_parse_header(void *, char *(*)(char * restrict, int, void *), char **, ssize_t *, char **);
+
+#endif /* !_GETA_NWAM_H_ */

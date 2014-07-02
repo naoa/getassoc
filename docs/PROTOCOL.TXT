@@ -1,0 +1,272 @@
+This document depicts gss outline by examples.
+
+--
+
+NAME: getprop
+FUNCTION: get feature vectors or properties of articles.
+     name attribute specifies the identifier of an article(see FORMAT.TXT).
+REQUEST:
+<gss version="3.0"><getprop xmlns="http://gss3.cs.nii.ac.jp/"
+	target="handle" a-props="vec,title,fss.0" >
+<!-- To retrieve a segment of full-text-serach index,
+     specify fss.# here # ranges 0 .. 32. -->
+	<article name="A1" />
+	<article name="A2" />
+	...
+<!--	<keyword name="T1" /> -->
+</getprop></gss>
+RESPONSE:
+<gss version="3.0"><result xmlns="http://gss3.cs.nii.ac.jp/"
+	status="OK" >
+	<article name="A1" vec='[["T1",3],["T2",5]]' title="foo" fss.0="...."/>
+	<article name="A2" vec='[["T2",1],["T3",8]]' title="foo" fss.0="...."/>
+	...
+<!--	<keyword name="T1" vec='[["A1",1],["A2",2]]' /> -->
+</result></gss>
+
+
+NAME: assoc
+FUNCTION: given a list of articles,
+    step 1. summarize the articles (i.e. extract featuring words of the list)
+    step 2. find articles similar to the summary
+    step 3. summarize the found articles (top 10)
+    step 4. cluster the found articles (step 2) and the summary (step 3)
+    , then returns the results of step 3 and step 4.
+(step 1 --> stage1,  step 2-4 --> stage2)
+REQUEST:
+<gss version="3.0"><assoc xmlns="http://gss3.cs.nii.ac.jp/"
+	target="handle"		-- handle name of the target corpus
+	narticles="5"		-- # of articles to be found (in step 2)
+	nkeywords="5"		-- # of topic-words to be found (in step 3)
+	nacls="1"		-- # of cluster of articles
+	nkcls="1"		-- # of cluster of topic-words
+	a-offset="0"		-- drop top `a-offset' articles from result
+	a-props="title,link"	-- properties which should be included
+	cross-ref="aw,wa"	-- request an article-word correlation matrix
+				-- possible values: empty string ("") or
+				--   comma separated list of
+				--   any combination of "aw", "wa", "ww", and "aa".
+	niwords="70"		-- # of featuring words used in step 1. if absent, defaults to 200.
+	yykn="10"		-- # of articles to be summarized in step 3. if absent, defaults to 10. a-offset is not used. (always use top `yykn' articles.)
+
+	xstage=""		-- select stages to be executed.
+	-- if the value is "1", summary will be returned.
+	-- else if the value is "2", input should be a summary, and resume execution in step 2 (stage2).
+	-- if query type is search, xstage is silently ignored
+
+	cutoff-df="*"	-- a word which DF(document frequency) is equal to or higher than this value will discarded in stage 1.
+			-- value 0 stands for infinity.
+			-- if absent, defaults to
+			--    min(1, pow(0.125, log10(N) - 4)) * N,
+			--    where N is # of documents in the target corpus.
+
+	stage1-sim="smart_wa"
+	stage2-sim="smart_aw"
+	dbginfo="yes"	-- generate additional information for debugging
+	>
+
+<!-- the rest of this request is an articles list, which used in step 1. -->
+	<freetext> ... </freetext>
+	<freetext cutoff-df="0" > ... </freetext>
+	<freetext stemmer="auto" > ... </freetext>
+<!--	<freetext lang="auto" > ... </freetext> - deprecated -->
+<!-- gss3 passes a freetext to stmd to split the text into words. -->
+<!-- add a cutoff-df attribute to each object to override the global cutoff-df value -->
+<!-- if cutoff-df is 0, no term of the article will be discarded because of frequencyness the term itself. -->
+	...
+	<article name="A1" source="handle1" />
+	<article name="A2" />	<!-- if source is absent, `target' will substitute it -->
+	...
+	<article           vec='[["T1",3],["T2",5]]' source="handle-ignored" />
+<!-- target is used always, for `vec' -->
+	<article           vec='[["T2",1],["T3",8]]' />
+	<article name="A5" vec="ignored" source="handle2" />
+<!-- note: `name' has higher precedence to `vec' -->
+	<article           vec='[["T2",1],["T3",8]]' cutoff-df="0" />
+	...
+<!--	<keyword name="T1" source="handle3" /> -->
+<!--	<keyword vec='[["A2",1],["A3",8]]' /> -->
+
+<!-- input for stage-2 follows: -->
+	<keyword name="T3" score="1.059463" />
+	<keyword name="T4" score="0.001693" />
+
+	<filter expression='("T3" &amp; !"T4") | "T2"' />
+	<filter><search options="ignore-case,ignore-space">
+			<join>
+				<p><s>京都<s>
+					<e type="re" distance="8">大阪</e></p>
+				<n>東京</n>
+\
+.
+{i}	i
+{i,}	i..
+{i,j}	i..j
+*	== {0,}
++	== {1,}
+?	== {0,1}
+^
+$
+[ぁ-ん]
+[^ぁ-ん]
+----- (|)
+----- \{ \} \#
+			</join>
+			<join>
+				<p><s>大阪<s>
+					<e type="re" distance="8">(京都|名古屋)</e></p>
+				<n>東京</n>
+			</join>
+		</search>
+	</filter>
+
+<!-- full-text search / cannot be used with other methods -->
+<!-- pattern is normalized to NFKC -->
+	<search segments="0-31" options="ignore-case">
+		<join segments="..." options="...">
+			<p segments="0,2-4" options="ignore-case,ignore-zdz"
+				>pattern1</p>
+			<n segments="1" ...> pattern2 </n>
+			...
+		</join>
+		<join>... <p> pattern3 </p> ...</join>
+		...
+	</search>
+
+<!-- XXX kore ha zissou sinai?
+	<search-cd><![CDATA[
+		pattern1@0,2-4#ignore-case,ignore-zdz&pattern2|patten3
+	]]></search-cd>
+-->
+
+</assoc></gss>
+RESPONSE:
+<gss version="3.0"><result xmlns="http://gss3.cs.nii.ac.jp/"
+	status="OK" >
+	<articles total="500" >
+		<cls>
+			<article name=".." score=".." title=".." link=".." />
+<!-- `name' and, `score' are included automatically, -->
+<!-- in addition to properties which requested by `a-props'. -->
+<!-- `id' will not appear in the attribute list, but it is still reserved -->
+			<article name=".." score=".." title=".." link=".." >
+				<cross-ref>
+					<keyword name="..." score="0.1" />
+					<keyword name="..." score="0.3" />
+					<keyword name="..." score="0.2" />
+				</cross-ref>
+				<dbginfo iw-weights="..." />
+			</article>
+			...
+		</cls>
+		<cls> ... </cls> ...
+	</articles>
+	<keywords total="2000" >
+		<cls>
+<!-- XXX w-props is NOT implemented yet. -->
+			<keyword name=".." score=".." />
+			<keyword name=".." score=".." >
+				<cross-ref> ... </cross-ref></keyword>
+			...
+		</cls>
+		<cls> ... </cls> ...
+	</keywords>
+	<dbginfo iwords="..." />
+</result></gss>
+
+RESPONSE (empty result):
+<gss version="3.0"><result xmlns="http://gss3.cs.nii.ac.jp/"
+	status="OK" note="..." >
+	<articles total="0" />
+	<keywords total="0" />
+</result></gss>
+
+RESPONSE(in case that xstage="1" is specified):
+<gss version="3.0"><result xmlns="http://gss3.cs.nii.ac.jp/"
+	status="OK" >
+	<keyword name="..." score="..." />
+	<keyword name="..." score="..." />
+	<keyword name="..." score="..." />
+<!-- XXX: transpose is not implemented -->
+	<article name="..." score="..." />
+</result></gss>
+
+
+NAME: inquire (catalogue)
+FUNCTION: get a catalogue of installed corpora
+REQUEST:
+<gss version="3.0"><inquire xmlns="http://gss3.cs.nii.ac.jp/"
+	type="catalogue" /></gss>
+RESPONSE:
+<gss version="3.0"><result xmlns="http://gss3.cs.nii.ac.jp/"
+	status="OK" >
+	<corpus name="hdhcx" title="Encyclopedia Galactica" properties="title,link" created="1141782415" ... />
+<!-- created: the time in seconds since the Epoch -->
+	<corpus name="senya" title="..." properties=... created="..." />
+<!--	<corpus name="apod" title="..." r-properties=... c-properties="..." created="..." /> -->
+	...
+</result></gss>
+
+
+
+;*** NOT IMPLEMENTED ***
+; NAME: inquire (server-list)
+; FUNCTION: get a catalogue of all servers
+; REQUEST:
+; <inquire type="server-list" />
+; RESPONSE:
+; <result>
+; 	<server name="Sunny!" uri="http://sunny/gss3/" />
+; 	<server name="SUL" uri="http://geta.stanford.edu/gss3/"
+;		flags="restricted" />
+; 	...
+; </result>
+
+
+;*** NOT IMPLEMENTED ***
+; NAME: assv
+; FUNCTION: given a list of articles/words, find similar words/articles.
+; If input is an article-list, the result is word-list, and vice versa.
+; For more detailed discussion, see leading comments in assv.c (Japanese).
+
+
+;*** NOT IMPLEMENTED ***
+; NAME: stem
+; FUNCTION: given a text, GETAssoc splits the text into morphemes,
+; in the same way which `stmd' will do.
+; <gss version="3.0"><stem stemmer="auto">
+; 	free text free text free text ...
+; </stem></gss>
+
+
+;*** NOT IMPLEMENTED ***
+; NAME: intrinsic
+; FUNCTION: provides access methods to GETA API
+; <gss version="3.0"><intrinsic>
+;
+; size handle dir
+; elem_num handle dir name
+; freq_sum handle dir name
+; max_elem_num handle dir
+; max_freq_sum handle dir
+; total_elem_num handle
+; total_freq_sum handle
+;
+; getvec handle dir name
+; getprop handle type dir name
+;
+; assv handle dir weight_type vec...
+; bex_assv handle dir weight_type vec... bool-expression
+; csb handle dir vec...
+; fss handle dir spec
+;
+; create handle
+; insert_article handle article
+; delete_article handle name
+; rename old new
+; drop handle
+;
+; </intrinsic></gss>
+
+--
+$Id: PROTOCOL.TXT,v 1.25 2010/11/06 03:39:23 nis Exp $

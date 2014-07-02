@@ -1,0 +1,66 @@
+This document describes how to setup distributed version
+
+0. design the distributed assocation system
+   1 node should be a parent node, and the others should be children.
+   For SMP architechture machine, it is a good idea to assign more than
+   one role for a machine.
+   Useally a client(parent) and a server(child) communicate via TCP.
+   Assign a name and port number for this commuincation. e.x. add following
+   to /etc/services:
+getassoc 12345/tcp
+
+   In case that a client and a server resides same machine, LOCAL socket
+   provides higher perfomance.  Decide pipe name: e.x. /tmp/getassoc.sock
+
+   Finally, write all servers in `@prefix@/etc/dnwam.conf'
+   Each line consists HOST\tPORT\tLOCALSOCKET.
+   One of HOST\tPORT or LOCALSOCKET may be empty,
+   or getassoc tries to connect LOCALSOCKET first, then HOST\tPORT.
+   example follows:
+localhost\tgetassoc\t/tmp/getassoc.sock
+example.com\tgetassoc\t
+\t\t/tmp/getassoc.sock
+   In this example, there are tow servers (localhost and example.com).
+   Each server will assigned node-id in order, start from 0, so
+   localhost will be the 0th server and example.com will be the 1st server.
+   If more than the servers described in dnwam.conf are required,
+   this list is used cyclically. for example, if the 2nd server is requestd,
+   localhost will be designated.
+
+1. Prepare index directory. 
+   Distributed index for each node must be created under @prefix@/pwam.
+   Each directory should be named ${DIR}.${NODEID},
+   here ${DIR} is 0 and 1, and ${NODEID} is the order of the server
+   in dnwam.conf, (start from 0).
+   If @prefix@/pwam is shared, or you do not care for unsed directory,
+   the following is suffice: (for 8 x 8 distributed-indice)
+
+	for d in 0 1; do
+		for h in 0 1 2 3 4 5 6 7; do
+			mkdir @prefix@/pwam/$d.$h
+		done
+	done
+
+2. start xgetassoc-server on each host: In our case, 
+   ./xgetassoc 12 -p getassoc -u /tmp/getassoc.sock &
+and
+   ./xgetassoc 12 -p getassoc &
+for localhost and example.com respectively.
+
+
+3. creating distributed index
+   to create #-distributed indice, followig dnwam.conf plan,
+   pass -o,-D,#,-C,dnwam.conf to stp.  to make 2 x 2 indice,
+   ./stp -o,-D,2,-C,dnwam.conf -b $GETAROOT $handle title,link < $handle.itb
+
+
+   additional info: If the number of articles server and words server is not equal,
+	use -D to specify the number of indice for word to article association
+	and use -Y to specify the number of indice for article to word association.
+	If the articles servers set and words servers set is not same,
+
+	use -C to specify the configuration file for article association servers,
+	and use -X to specify the configuration file for word association servers.
+
+--
+$Id: DNWAM.TXT,v 1.4 2009/09/28 23:32:34 nis Exp $

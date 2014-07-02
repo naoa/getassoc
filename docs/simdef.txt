@@ -1,0 +1,174 @@
+★技術資料 ---- この文書の内容を信用しないこと
+
+simdef.c:
+
+SMART(WA) の定義:
+	sim(d|q) = (1.0 / norm(d)) \sum_t { wq(t|q) * wd(t|d) }
+	wq(t|q) = ((1.0 + log(TF(t|q))) / (1.0 + log(aveTFq))) * idf(t)
+	wd(t|d) = 1.0 + log(TF(t|d))
+	norm(d) = (avelen + Slope * (DF(.|d) - avelen)) * (1.0 + log(TF(.|d)/DF(.|d)));
+	Slope = 0.2;
+	avelen = g->total_DF_d / (double)total_N_d;
+	aveTFq = \sum_t TF(t|q) / g->nq
+	idf(t) = log1p(g->total_N_d / (double)DF(t))
+	total_N_d = wam_size(g->w, g->rdir);
+
+ここに,
+
+qdir: t を引き数に渡して引ける向き
+qp->weight は assv の最後の引き数(struct syminfo * 型)に与える.
+
+t = &q[t]
+DF(t) == g->q[t].DF;
+TF(t) == g->q[t].TF;
+TF(t|q) == g->q[t].TF_d
+
+d = &t[d]
+
+TF(t|d) == d->freq
+
+TF(.|d) = d->freq_sum	// full length
+DF(.|d) = d->elem_num	// full length
++
++ aveTFq は q に含まれる単語の q における TF の平均
+
+avelen は, (d が属するコーパス(DXR)の総 DF) / (dxr_d のサイズ)
+であるから, このコーパスにおける文書の平均(異なり)長さである.
+DF(.|d) は, (発見した文書 d の(異なり)長さ) である.
+norm(d) の第 1 項は,
+それらを (1 - Slope) : Slope で按分している.
+
+TF(.|d) は (発見した文書 d の TF) であるから,
+TF(.|d) / DF(.|d) は
+発見した文書における単語の平均出現回数である.
++
++ 通常, nq = 1.
++
++ この類似度は, SMART_WA に良く似ており, 違いは, wq だけである.
+
+
+SMART_WA の定義:
+	sim(d|q) = (1.0 / norm(d)) \sum_t { wq(t|q) * wd(t|d) }
+	wq(t|q) = qp->weight
+	wd(t|d) = 1.0 + log(TF(t|d))
+	norm(d) = (avelen + Slope * (DF(.|d) - avelen)) * (1.0 + log(TF(.|d)/DF(.|d)));
+	Slope = 0.2;
+	avelen = g->total_DF_d / (double)total_N_d;
++	total_N_d = wam_size(g->w, g->rdir);
+
+ここに,
+
+qdir: t を引き数に渡して引ける向き
+qp->weight は assv の最後の引き数(struct syminfo * 型)に与える.
+
+d = &t[d]
+
+TF(t|d) == d->freq
+
+TF(.|d) = d->freq_sum	// full length
+DF(.|d) = d->elem_num	// full length
+
+avelen は, (d が属するコーパス(DXR)の総 DF) / (dxr_d のサイズ)
+であるから, このコーパスにおける文書の平均(異なり)長さである.
+DF(.|d) は, (発見した文書 d の(異なり)長さ) である.
+norm(d) の第 1 項は,
+それらを (1 - Slope) : Slope で按分している.
+
+TF(.|d) は (発見した文書 d の TF) であるから,
+TF(.|d) / DF(.|d) は
+発見した文書における単語の平均出現回数である.
+
+
+SMART_AW の定義:
+	sim(d|q) = (1.0 / norm(d)) \sum_t { wq(t|q) * wd(t|d) }
+	wq(t|q) = 1.0 / (1.0 + log(TF(t)/DF(t)))
+	wd(t|d) = 1.0 + log(TF(t|d))
+	norm(d) = DF(q) / log1p(N / DF(d))
+
+ここに,
+
+qdir: t を引き数に渡して引ける向き
+
+DF(q) == nq
+TF(q)		-- undefined
+
+t = &q[t]
+DF(t) == t->elem_num	==> q[t].DF
+TF(t) == t->freq_sum	==> q[t].TF
+
+DF(t|q) == 1
+TF(t|q)		-- undefined
+
+d = &t[d]
+
+TF(t|d) == d->freq
+DF(t|d) == 1
+
+TF(d) == wam_freq_sum(w, rev(qdir), d->id)
+DF(d) == wam_elem_num(w, rev(qdir), d->id)
+
+
+
+HD
+
+使い方: ある単語 q0 を選ぶ. その単語を含むすべての文書を集め,
+それぞれの特徴ベクトル t のリストを q とする
+qdir は WAM_ROW とする
+
+入力は単語のリスト(== 文書の特徴ベクトル)のリスト
+t は, q の要素, すなわち文書である
+d は, どれかの t の要素, すなわち単語になる
+
+	wq(t, q) は, すべての t ごとに呼び出される(q は固定)
+	wd(t, d) は, すべての t と d のペアごとに呼び出される
+	norm(d, g) は, すべての d ごとに呼び出される
+
+	いま, ある単語 d に着目する
+
+	全文書数 ==> N とする
+		== wam_size(w, qdir) == g->N
+
+	d が全文書のうちいくつの文書に現れるか ==> K とする
+		== wam_elem_num(g->w, g->rdir, d)
+
+	q の長さ ==>  n とする
+		== g->nq
+
+	d が(q の)いくつの t に現れるか ==> k とする
+		ちなみに, eject の引き数 h は
+		d を含む t のみからなる q のサブセットであり,
+		その長さは同引き数の nh である
+		これが求める k である.
+
+	< d の weight を 1 - hyperd(N, K, n, k) とする
+	> d の weight を -log(hyperd(N, K, n, k)) とする
+
+	よって, wq, wd, norm は用いない (とりあえず 0)
+
+	sim(d|q) = 1 - hyperd(N, K, n, k)
+
+COS の定義:
+	sim(d|q) = (1.0 / norm(d)) \sum_t { wq(t|q) * wd(t|d) }
+	wq(t|q) = TF(t|q)
+	wd(t|d) = TF(t|d)
+	norm(d) = |q| * |d|
+
+ここに,
+
+qdir: t を引き数に渡して引ける向き
+
+t = &q[t]
+DF(t) == t->elem_num	==> q[t].DF
+TF(t) == t->freq_sum	==> q[t].TF
+
+DF(t|q) == 1
+TF(t|q)		-- undefined
+
+d = &t[d]
+
+TF(t|d) == d->freq
+DF(t|d) == 1
+
+TF(d) == wam_freq_sum(w, rev(qdir), d->id)
+DF(d) == wam_elem_num(w, rev(qdir), d->id)
+

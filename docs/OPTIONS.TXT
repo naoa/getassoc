@@ -1,0 +1,20 @@
+$cmode
+$v0size
+$compress
+$hash
+$realm
+$np
+$ioptions=ignore-case,ignore-space,collapse-zdz
+
+<itb:opt type="cmode">3</itb:opt>
+<itb:opt type="ioptions">ignore-case,ignore-space,collapse-zdz</itb:opt>
+
+-- memo
+
+@title=Astronomy Picture of the Day
+@tag=jimbou,debug
+@lang=en
+
+<itb:meta type="title">Astronomy Picture of the Day</itb:meta>
+<itb:meta type="tag">jimbou,debug</itb:meta>
+<itb:meta type="lang">en</itb:meta>

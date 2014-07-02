@@ -1,0 +1,1 @@
+tf ::= 1 / TF(.|d) \sum_t TF(t|d) * TF(t|q) .

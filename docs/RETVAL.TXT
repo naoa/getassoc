@@ -1,0 +1,28 @@
+int
+	-1: error
+	else: success
+
+	0: false
+	else: true
+
+	-1: <
+	0: ==
+	1: >
+
+u_int, size_t:
+	0: error
+	else: success
+
+
+df_t, freq_t:
+	-1: error
+	else: success
+
+idx_t, hashval_t:
+	0: error
+	else: success
+
+ptr:
+	NULL: error
+	else: success
+

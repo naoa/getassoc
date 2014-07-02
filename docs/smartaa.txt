@@ -1,0 +1,40 @@
+/*
+ * q, r: 単語のリスト
+ *  q->id: 単語
+ *  q->TF_d: q->id が文書 q に現れる頻度
+ *  q->DF: 全コーパス中での q->id が現れる文書の数
+ *  q->weight: 1.0 + log(q->TF_d)
+ * TF_q: q->TF_d の合計
+ * TF_r: r->TF_d の合計
+ * N .. 全文書数
+ * TF .. 全文書の TF の合計
+ */
+double
+smartaa(q, qlen, TF_q, r, rlen, TF_r, N, TF)
+struct syminfo *q, *r;
+df_t qlen, rlen, N;
+freq_t TF_q, TF_r, TF;
+
+
+
+/*
+ * INPUT:
+ * sl1, sl2 .. smart を計算したい syminfoLE のリスト
+ *  (破壊的にソートされる)
+ * nsl1, nsl2 .. それぞれの要素数
+ *  sl*->s[*].id: 単語/文書 ID
+ *  sl*->s[*].TF_d: q->id が文書 q に現れる頻度
+ *  sl*->s[*].DF: 全コーパス中での sl*->id が現れる文書の数
+ *  sl*->s[*].weight: 破壊される
+ * N .. 全文書数
+ * TF .. 全文書の TF の合計
+ *
+ * OUTPUT
+ * RETURN VALUE: 2d array of dobule (dimension = nsl1 x nsl2)
+ *  r[i][j] == smartaa(sl1[i], sl2[i])
+ */
+double **
+smartmtrxQ(sl1, nsl1, sl2, nsl2, N, TF)
+struct syminfole *sl1, *sl2;
+df_t nsl1, nsl2, N;
+freq_t TF;

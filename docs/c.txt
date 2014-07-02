@@ -1,0 +1,387 @@
+TECHNICAL DOCUMENT: C-API
+
+INCLUDE FILES:
+<sys/types.h>
+<stdio.h>
+"nwam.h"
+ +----- <inttypes.h>
+ +----- "simdef.h"
+
+INCLUDE FILES FOR SIMILARITY DEFINITION FILES:
+"xsimdef.h"
+ +----- <config.h>
+ +----- <sys/param.h> ...
+ +----- "nwam.h"
+ +----- "assvP.h"
+ +----- <gifnoc.h>
+
+
+LIBRARIES:
+libnwam.a
+libnwam.so
+
+
+TYPEDEFS:
+idx_t		-- used to represent an ID, i.e. index of row/colum
+df_t		-- used to represent a value relates to DF.
+		   df_t has same width as idx_t, but differs in signedness.
+freq_t		-- used to store a value relates to TF.
+		   freq_t may not be compatible with size_t.
+WAM *		-- type of wam handle
+
+dir_t		NOT IMPLEMENTED
+
+xsc_opt_t	-- a type represents options of xstrcmp
+fss_seg_t	-- a type represents segment-set of full-string-serach module.
+
+
+STRUCTURES:
+struct syminfo
+struct s_syminfo
+struct syminfole
+struct assv_cookie_mask_t
+struct assv_scookie
+struct xr_elem
+struct xr_vec
+struct bxue_t
+struct cs_elem
+
+struct art
+struct fss_simple_query
+struct fss_con_query
+struct fss_query
+
+PRIVATE STRUCTURES:
+struct nwam_d;
+struct bxu_t;
+
+
+CONSTANTS & MACROS:
+
+eum dir_t = { wam_row = 0, wam_col = 1 };
+
+WEIGHT_TYPE_NAMES				P
+WT_*
+
+CS_TYPE_NAMES					P
+
+ASSV_SC_*
+
+PRIuIDX_T
+PRIdDF_T
+PRIdFREQ_T
+
+WAM_ROW						P
+WAM_COL						P
+WAM_REVERT_DIRECTION
+
+command				type	description
+WAM_SETOPT_ALLOWERROR	   (u_int)	set error-rate to be 1.0 divieded by the given value
+WAM_SETOPT_NEED_DISTSTAT   (int)	if 1, WAM_GETOPT_DISTSTAT will be enabled.
+
+WAM_GETOPT_ALLOWERROR	   (u_int)	get current value of allowerror
+WAM_GETOPT_MAY_INCOMPLETE  (int)	returns 1 if the last call to assv may erraneous
+WAM_GETOPT_DISTSTAT	   (df_t *)	returns a list of numbers of used answer from each portion
+WAM_GETOPT_DISTSTAT_NN_ROW (size_t)	get split number of document WAM
+WAM_GETOPT_DISTSTAT_NN_COL (size_t)	get split number of word WAM
+
+CS_HBC
+WSH_OR
+
+xstrcmp
+
+
+
+FUNCTIONS:
+
+- wam_init					P
+int wam_init(char const *rootdir)
+
+The wam_init function initializes the libnwam module.
+rootdir should be either an absolute path to GETAssoc's root
+directory (a.k.a prefix).
+Upon successful completion, wam_init returns 0. 
+Otherwise -1 is returned.
+
+- wam_open					P
+WAM *wam_open(char const *name, ...)
+
+The wam_open function opens the WAM whose name is name and associates a
+handle with it.
+Upon successful completion, wam_open returns a handle to the WAM.
+Otherwise a NULL is returned.
+
+- wam_close					P
+int wam_close(WAM *w)
+
+The wam_close functions dissociates the handle to a WAM.
+Upon successful completion, 0 is returned.
+Otherwise -1 is returned.
+note: subsidiarie properties and fss are automaticaly closed by wam_close.
+
+wam_close may be used to close propertie and fss opend by
+wam_prop_open and wam_fss_open respectively.
+
+- wam_handle
+NOT IMPLEMENTED
+
+- wam_rename
+int wam_rename(char const *from, char const *to, ...)
+
+wam_rename causes the WAM named from to be renamed as to.
+If to exists, wam_rename failes.
+Upon successful completion, 0 is retured.
+Otherwise -1 is returned.
+
+- wam_drop
+int wam_drop(char const *name, ...)
+
+wam_drop removes a WAM whose name is name.
+Upon successful completion, 0 is retuend.
+Otherwise -1 is returned.
+
+- wam_name2id					P
+idx_t wam_name2id(WAM *w, int dir, char const *name)
+
+The function wam_name2id returns the index of a row/column in w named by name,
+if dir is WAM_ROW or WAM_COL, respectively.
+A positive value is returend on success; othersize a 0 is returend.
+
+- wam_id2name					P
+char const *wam_id2name(WAM *w, int dir, idx_t id)
+
+The function wam_id2name returns a row/column name
+in w indexed by id, if dir is WAM_ROW or WAM_COL respectively.
+A pointer to string is returend on success; othersize a NULL is returend.
+
+
+- wam_size					P
+df_t wam_size(WAM *w, int dir)
+
+The function wam_size returns the number of row or column of a WAM associated
+with w, if dir is WAM_ROW or WAM_COL, respectively.
+A non-negative value is returend on success; othersize a -1 is returend.
+
+- wam_elem_num					P
+df_t wam_elem_num(WAM *w, int dir, idx_t id)
+
+The function wam_elem_num returns the number of non-zero elements of
+a row/column vector of w, indexed by id.
+A non-negative value is returend on success; othersize a -1 is returend.
+
+- wam_freq_sum					P
+freq_t wam_freq_sum(WAM *w, int dir, idx_t id)
+
+The function wam_freq_sum returns the sum of non-zero element's values of
+a row/column vector of w, indexed by id.
+A non-negative value is returend on success; othersize a -1 is returend.
+
+- wam_max_elem_num				P
+- wam_max_freq_sum				P
+- wam_total_elem_num				P
+- wam_total_freq_sum				P
+
+- wam_get_vec					P
+df_t wam_get_vec(WAM *w, int dir, idx_t id, struct xr_vec const **v)
+
+the function wam_get_vec fetches a row/column vector of w indexed by id,
+if dir is WAM_ROW or WAM_COL respectively.
+A pointer to the vector is stored where the v points.
+The returned vector point to static data; the data is overwritten by each call.
+A non-negative value is retuend on success; otherwise -1 is returned.
+The return value is suitable to pass to assv as a value of `q.v'.
+
+- wam_prop_open
+WAM *wam_prop_open(WAM *w, int dir, char const *name)
+
+The function wam_prop_open opens the row/column property of WAM w whose name
+is name and associates a handle with it.
+Upon successful completion, wam_prop_open returns a handle to an opend property.
+Otherwise a NULL is returned.
+
+- wam_prop_nentries
+df_t wam_prop_nentries(WAM *w)
+
+The function wam_prop_nentries returns the number of entries of the property
+associated with w.
+A non-negative value is returend on success; othersize a -1 is returend.
+note: if the controlling WAM is closed, all properties of the WAM are
+automatically closed.
+
+- wam_prop_gets					P
+ssize_t wam_prop_gets(WAM *w, idx_t id, char const **ptr)
+
+The function wam_prop_gets retrieves the elemnet of property w
+indexed by id.
+A pointer to the string of the element is stored where the ptr points.
+The returend string is terminated by a NUL (0) character.
+Also the returned string resides is static data; the data is overwritten by 
+each call.
+A non-negative value is retuend on success; otherwise -1 is returned.
+
+- wam_fss_open					P
+- wam_fss_gets					P
+
+- assv (q, nq, w, qdir, type, nd, totalp
+The function assv calculates similarity between `q' and each 
+article/word of `w' using similarity `type',
+then returns topmost `*nd' articles/words in order of the similality.
+if `q' is an article (i.e. `q' is a word list), then `qdir' shall be WAM_COL.
+on the other hand, if `q' is a word (i.e. `q' is an article list),
+then `qdir' shall be WAM_ROW.
+The actual number of returned articles/words is stored where `nd' points.
+The total number of articles/words consulted to be a candidate is 
+stored whre `totalp' points.
+
+`q' is a list of ID of `w' (set to member `id').
+Some similarity uses member `TF_d' as the frequency of the article/word
+in `q', so user should set `TF_d' properly.
+Besides certain similarity uses member `weight' as input, ditto.
+The member `v' shall be set a NULL by user.
+
+Assv returns newly allocated articles/words list.
+
+Assv accepts any vector instead of `id' of w.  In the case,
+the vector is set to member `v' and the member `id' should be 0.
+(Or assv will try to free `v', which will cause double-free error!)
+
+*** the following discussion is very complicated: pls note that
+*** the cutoff_df_list is applied to the result. input vector is
+*** remain intact.
+If a cutoff_df_list is set to `cookie' and ASSV_SC_CUTOFF_DF_LIST flag is set,
+assv filters out a high frequent word/article from the result.
+Cutoff_df_list length should be same as `q' length. 
+Each cutoff_df_list element's of value is consulted,
+if a found word/articles from corresponding `q' has
+greater DF than the value, and the word/articles is omitted form the result.
+A value 0 indicates the word/article sholud not be ignored.
+
+
+If a bool-expression is set to `cookie' (bx.{b,blen}) and ASSV_SC_BX flag
+is set,
+assv filters out articles/words which does not satisfy the expression.
+A bool-expression's predicate variable is a word/article of w.
+While evaluating an article/word satisfies a bool-expression or not,
+a predicate variable evaluates to true if a word/article indicated by the
+variable appears in the article/word, and vice versa.
+
+If a full-string-search expressin is set to `cookie' (fssq) and ASSV_SC_FSS
+flag is set,
+assv filters out articles/words which does not satisfy the expression:
+if an artice/word appears in full-string-search result, or not.
+More intutively, assv calculates intersection of assocative-search
+and full-string-search.
+
+- wsh						P
+A wrapper of assv.
+
+- bex_wsh					P
+A wrapper of assv.  The bex_wsh function passes a given boolean-expression
+to the assv.
+
+- fss_wsh					P
+A wrapper of assv.  The fss_wsh function passes a given full-string-search
+specification to the assv.
+
+- wam_xfss					XXX P
+The wam_xfss function executes full-string-search.
+
+- wam_setmask
+
+- ncsb						P
+	destroy u.c
+
+- text2vec (text, w, dir, stemmer)		P
+The function text2vec splits a text into morphemes, 
+using morphological-analyzer `stemmer'.
+Text2vec returns morphemes only belongs to w(dir).
+The return value is suitable to pass to assv as a value of `q.v'.
+
+- normalize_text (char const *)
+The function normalize_text normalizes a test to NFKC.
+The result is suitable for comparing as well as human reading.
+
+- bxu_conv
+The function bux_conv compiles serialized bool-expression into
+executable data structure.
+
+- bxu_free
+The function bxu_conv reclaims the memofy of compiled bool-expression.
+
+MISCELLANEOUS UTILITY FUNCTIONS:
+
+- wam_setopt					XXX P
+- wam_getopt
+
+- find_dlsim
+
+- xstrncmp
+
+- parse_segs
+- parse_opts
+- arts2syminfo
+- arts2idvec
+
+- free_fss_query
+
+- smartaa
+- smartmtrxQ
+	destroy u.idf
+
+INCOGNITO FUNCTIONS (PRIVATE USE):
+
+	** utility
+bdup
+dxr_dup
+splitv
+count_char
+
+	** comparison functions
+n_sym_compar
+n_sym_icompar
+
+	** wam
+wam_update
+wam_dumpall
+nwam_add_tmp
+get_registered_handle
+
+	** fss
+wam_fss_dump
+fss_open
+xfss
+fss_close
+fss_gets
+/* mkri -- if ENABLE_GETA  */
+
+	** server
+xgserv_loop
+
+	** timer
+timer_new
+timer_init
+timer_check_elapsed
+timer_print_elapsed
+timer_sprint_elapsed
+
+	** printer
+print_xr_vec 
+print_syminfo
+print_s_syminfo
+snprint_xr_vec
+snprint_syminfo
+snprint_s_syminfo
+
+	** stemmer
+xstem_create
+xstem_create_pipe
+xstem
+xstem_send
+xstem_recv
+xstem_destroy
+cstem_to_string
+
+	** http
+send_binary_content
+send_text_content
+http_parse_header
